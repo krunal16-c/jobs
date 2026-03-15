@@ -12,7 +12,17 @@
   --bg2: #12121a;
   --fg: #e0e0e8;
   --fg2: #888894;
+  --border: rgba(255,255,255,0.06);
+  --hbar-track: rgba(255,255,255,0.04);
   --sidebar-w: 232px;
+}
+body.light {
+  --bg: #f2f2f7;
+  --bg2: #ffffff;
+  --fg: #1a1a2e;
+  --fg2: #6b6b80;
+  --border: rgba(0,0,0,0.08);
+  --hbar-track: rgba(0,0,0,0.06);
 }
 
 body {
@@ -28,7 +38,7 @@ body {
   top: 0; left: 0; bottom: 0;
   width: var(--sidebar-w);
   background: var(--bg2);
-  border-right: 1px solid rgba(255,255,255,0.06);
+  border-right: 1px solid var(--border);
   padding: 18px 16px;
   z-index: 10;
   overflow-y: auto;
@@ -148,7 +158,7 @@ body {
 .hbar-track {
   flex: 1;
   height: 10px;
-  background: rgba(255,255,255,0.04);
+  background: var(--hbar-track);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -173,7 +183,7 @@ body {
   padding: 5px 0;
   font-size: 10px;
   font-weight: 500;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
   border-radius: 4px;
   background: transparent;
   color: var(--fg2);
@@ -181,13 +191,35 @@ body {
   transition: all 0.15s;
 }
 .view-toggle button.active {
-  background: rgba(255,255,255,0.08);
+  background: var(--hbar-track);
   color: var(--fg);
-  border-color: rgba(255,255,255,0.2);
+  border-color: rgba(128,128,128,0.25);
 }
 .view-toggle button:hover:not(.active) {
-  background: rgba(255,255,255,0.04);
+  background: var(--hbar-track);
 }
+
+/* Light mode toggle */
+#themeToggle {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--fg2);
+  transition: all 0.15s;
+  z-index: 20;
+  flex-shrink: 0;
+}
+#themeToggle:hover { color: var(--fg); background: var(--hbar-track); }
 
 /* Filter chips */
 .filter-chips {
@@ -199,7 +231,7 @@ body {
   padding: 3px 8px;
   font-size: 10px;
   font-weight: 500;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
   border-radius: 12px;
   background: transparent;
   color: var(--fg2);
@@ -208,12 +240,12 @@ body {
   white-space: nowrap;
 }
 .filter-chip.active {
-  background: rgba(255,255,255,0.12);
+  background: var(--hbar-track);
   color: var(--fg);
-  border-color: rgba(255,255,255,0.25);
+  border-color: rgba(128,128,128,0.3);
 }
 .filter-chip:hover:not(.active) {
-  background: rgba(255,255,255,0.06);
+  background: var(--hbar-track);
   color: var(--fg);
 }
 
@@ -240,7 +272,7 @@ canvas#canvas {
   position: fixed;
   pointer-events: none;
   background: var(--bg2);
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 13px;
@@ -275,14 +307,35 @@ canvas#canvas {
   color: var(--fg2);
   margin-top: 8px;
   line-height: 1.4;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid var(--border);
   padding-top: 8px;
 }
+#tooltip .tt-jbtitle {
+  font-size: 11px;
+  color: var(--fg2);
+  margin-bottom: 4px;
+}
+
+/* Scatter view legend */
+.scatter-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--fg2);
+}
+.scatter-legend .leg-gradient {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.scatter-legend canvas { border-radius: 2px; }
 </style>
 </head>
 <body>
 
 <div id="sidebar">
+  <button id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   <div>
     <h1>AI Exposure of the Canadian Job Market</h1>
     <div class="subtitle">516 occupations · colour = AI exposure<br>
@@ -345,18 +398,58 @@ canvas#canvas {
     <canvas id="gradientLegend" width="80" height="8"></canvas>
     <span>High</span>
   </div>
+
+  <div class="scatter-legend" id="scatterLegend" style="display:none;">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--fg2);">Outlook colour</div>
+    <div class="leg-gradient">
+      <span>Surplus</span>
+      <canvas id="outlookLegend" width="80" height="8"></canvas>
+      <span>Shortage</span>
+    </div>
+    <div style="font-size:10px;color:var(--fg2);margin-top:1px;">Column width = employment share</div>
+  </div>
 </div>
 
 <canvas id="canvas"></canvas>
 
 <div id="tooltip">
   <div class="tt-title"></div>
+  <div class="tt-jbtitle"></div>
   <div class="tt-exposure"></div>
   <div class="tt-stats"></div>
   <div class="tt-rationale"></div>
 </div>
 
 <script>
+
+// ── Theme ───────────────────────────────────────────────────────────────
+
+let isLight = localStorage.getItem("theme") === "light";
+// Apply CSS class immediately to prevent flash
+if (isLight) document.body.classList.add("light");
+
+function applyTheme() {
+  document.body.classList.toggle("light", isLight);
+  document.getElementById("themeToggle").textContent = isLight ? "🌙" : "☀️";
+  if (rects.length || colRects.length) {
+    if (currentView === "treemap") draw(); else drawColumns();
+  }
+  drawGradientLegend();
+  drawOutlookLegend();
+}
+
+function toggleTheme() {
+  isLight = !isLight;
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+  applyTheme();
+}
+
+function canvasBg() { return isLight ? "#f2f2f7" : "#0a0a0f"; }
+function labelPrimary(hov) { return isLight ? (hov ? "rgba(0,0,0,0.95)" : "rgba(0,0,0,0.85)") : (hov ? "#fff" : "rgba(255,255,255,0.9)"); }
+function labelSecondary() { return isLight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.55)"; }
+function labelTertiary() { return isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.4)"; }
+function hoverStroke() { return isLight ? "rgba(0,0,0,0.8)" : "#fff"; }
+function cellAlpha(hov) { return hov ? (isLight ? 0.92 : 0.85) : (isLight ? 0.72 : 0.55); }
 
 // ── Filters ─────────────────────────────────────────────────────────────
 
@@ -510,6 +603,7 @@ function setView(view) {
   currentView = view;
   document.querySelectorAll(".view-toggle button").forEach(b => b.classList.remove("active"));
   document.querySelector(`.view-toggle button[onclick="setView('${view}')"]`).classList.add("active");
+  document.getElementById("scatterLegend").style.display = view === "scatter" ? "" : "none";
   hovered = null;
   hideTooltip();
   resize();
@@ -551,7 +645,7 @@ function layout() {
 function draw() {
   const w = canvas.width, h = canvas.height;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = "#0a0a0f";
+  ctx.fillStyle = canvasBg();
   ctx.fillRect(0, 0, w/dpr, h/dpr);
 
   for (const r of rects) {
@@ -560,11 +654,11 @@ function draw() {
     const rx = r.rx + g, ry = r.ry + g, rw = r.rw - g*2, rh = r.rh - g*2;
     if (rw <= 0 || rh <= 0) continue;
 
-    ctx.fillStyle = exposureColorCSS(r.exposure, isHovered ? 0.85 : 0.55);
+    ctx.fillStyle = exposureColorCSS(r.exposure, cellAlpha(isHovered));
     ctx.fillRect(rx, ry, rw, rh);
 
     if (isHovered) {
-      ctx.strokeStyle = "#fff";
+      ctx.strokeStyle = hoverStroke();
       ctx.lineWidth = 2;
       ctx.strokeRect(rx, ry, rw, rh);
     }
@@ -578,16 +672,16 @@ function draw() {
 
       const fontSize = Math.min(13, Math.max(8, Math.min(rw / 9, rh / 2.5)));
       ctx.font = `500 ${fontSize}px -apple-system, system-ui, sans-serif`;
-      ctx.fillStyle = isHovered ? "#fff" : "rgba(255,255,255,0.9)";
+      ctx.fillStyle = labelPrimary(isHovered);
       ctx.textBaseline = "top";
 
-      // Truncate title to fit
-      let title = r.title;
+      // Use Job Bank canonical title when available
+      let title = r.title_jobbank || r.title;
       const maxW = rw - 8;
       while (title.length > 4 && ctx.measureText(title).width > maxW) {
         title = title.slice(0, -1);
       }
-      if (title !== r.title) title = title.slice(0, -1) + "…";
+      if (title !== (r.title_jobbank || r.title)) title = title.slice(0, -1) + "…";
       ctx.fillText(title, rx + 4, ry + 3);
 
       // Second line: exposure + jobs
@@ -597,7 +691,7 @@ function draw() {
         const line2 = score + (jobs ? " · " + jobs : "");
         const fs2 = Math.max(7, fontSize - 2);
         ctx.font = `400 ${fs2}px -apple-system, system-ui, sans-serif`;
-        ctx.fillStyle = "rgba(255,255,255,0.55)";
+        ctx.fillStyle = labelSecondary();
         ctx.fillText(line2, rx + 4, ry + 3 + fontSize + 2);
       }
 
@@ -606,7 +700,7 @@ function draw() {
         const payStr = "$" + Math.round(r.pay / 1000) + "K/yr";
         const fs3 = Math.max(7, fontSize - 2);
         ctx.font = `400 ${fs3}px -apple-system, system-ui, sans-serif`;
-        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.fillStyle = labelTertiary();
         ctx.fillText(payStr, rx + 4, ry + 3 + fontSize * 2 + 4);
       }
 
@@ -651,24 +745,44 @@ function eduLabel(raw) {
 
 function showTooltip(d, mx, my) {
   const tt = document.getElementById("tooltip");
-  tt.querySelector(".tt-title").textContent = d.title;
+  // Use Job Bank title as primary; show NOC title underneath if different
+  const displayTitle = d.title_jobbank || d.title;
+  tt.querySelector(".tt-title").textContent = displayTitle;
+
+  // Show NOC title if different from Job Bank title
+  const jbEl = tt.querySelector(".tt-jbtitle");
+  if (d.title_jobbank && d.title_jobbank !== d.title) {
+    jbEl.textContent = "Also: " + d.title;
+    jbEl.style.display = "";
+  } else {
+    jbEl.style.display = "none";
+  }
 
   const score = d.exposure != null ? d.exposure : null;
   if (score != null) {
     const color = exposureColorCSS(score, 1);
+    const barBg = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
     tt.querySelector(".tt-exposure").innerHTML =
       `<span style="color:${color};font-weight:600;">AI Exposure: ${score}/10</span>` +
-      `<div style="margin-top:3px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;">` +
+      `<div style="margin-top:3px;height:4px;background:${barBg};border-radius:2px;">` +
       `<div style="height:100%;width:${score*10}%;background:${color};border-radius:2px;"></div></div>`;
   } else {
     tt.querySelector(".tt-exposure").innerHTML = "";
+  }
+
+  // Education: use scraped requirement if available, else TEER label
+  let eduText = "";
+  if (d.education_req && d.education_req.length > 0) {
+    eduText = d.education_req[0].length > 80 ? d.education_req[0].slice(0, 78) + "…" : d.education_req[0];
+  } else {
+    eduText = eduLabel(d.education);
   }
 
   tt.querySelector(".tt-stats").innerHTML = `
     <span class="label">Median pay</span><span class="value">${formatPay(d.pay)}</span>
     <span class="label">Employment 2023</span><span class="value">${formatNumber(d.jobs)}</span>
     <span class="label">Outlook</span><span class="value">${d.outlook_desc || "—"}</span>
-    <span class="label">Education</span><span class="value">${eduLabel(d.education)}</span>
+    <span class="label">Education</span><span class="value" style="text-align:right;font-size:10px;">${eduText}</span>
     <span class="label">Category</span><span class="value" style="text-align:right;font-size:10px;">${d.category}</span>
     <span class="label">NOC 2021</span><span class="value">${d.noc_code || "—"}</span>
   `;
@@ -746,34 +860,45 @@ function layoutColumns() {
   colRects._meta = { scores, pad, colJobTotals, totalJobs, availW, plotH, colGap };
 }
 
+function shortOutlook(desc) {
+  if (!desc) return "";
+  if (desc.includes("Strong") && desc.includes("Shortage")) return "Strong demand";
+  if (desc.includes("Shortage")) return "Moderate demand";
+  if (desc.includes("Strong") && desc.includes("Surplus")) return "Strong surplus";
+  if (desc.includes("Surplus")) return "Moderate surplus";
+  if (desc === "Balance") return "Balanced";
+  return desc;
+}
+
 function drawColumns() {
   const w = canvas.width, h = canvas.height;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = "#0a0a0f";
+  ctx.fillStyle = canvasBg();
   ctx.fillRect(0, 0, w/dpr, h/dpr);
 
   const meta = colRects._meta;
   if (!meta) return;
 
-  ctx.font = "500 11px -apple-system, system-ui, sans-serif";
+  // Column score labels (top)
+  ctx.font = "600 11px -apple-system, system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
-
   let hx = meta.pad.left;
   for (let i = 0; i < meta.scores.length; i++) {
     const colW = (meta.colJobTotals[i] / meta.totalJobs) * meta.availW;
-    if (colW > 16) {
-      ctx.fillStyle = exposureColorCSS(meta.scores[i], 0.7);
-      ctx.fillText(meta.scores[i], hx + colW/2, meta.pad.top - 5);
+    if (colW > 14) {
+      ctx.fillStyle = exposureColorCSS(meta.scores[i], 0.85);
+      ctx.fillText(meta.scores[i], hx + colW/2, meta.pad.top - 3);
     }
     hx += colW + meta.colGap;
   }
 
-  ctx.fillStyle = "rgba(255,255,255,0.4)";
+  // X-axis label
+  ctx.fillStyle = isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.35)";
   ctx.font = "11px -apple-system, system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.fillText("AI Exposure →", meta.pad.left + meta.availW/2, meta.pad.top + meta.plotH + 6);
+  ctx.fillText("AI Exposure score →", meta.pad.left + meta.availW/2, meta.pad.top + meta.plotH + 6);
 
   const gap = 0.5;
   for (const r of colRects) {
@@ -781,11 +906,11 @@ function drawColumns() {
     const rx = r.rx + gap, ry = r.ry + gap, rw = r.rw - gap*2, rh = r.rh - gap*2;
     if (rw <= 0 || rh <= 0) continue;
 
-    ctx.fillStyle = outlookColorCSS(r.outlook, isHovered ? 0.85 : 0.55);
+    ctx.fillStyle = outlookColorCSS(r.outlook, cellAlpha(isHovered));
     ctx.fillRect(rx, ry, rw, rh);
 
     if (isHovered) {
-      ctx.strokeStyle = "#fff";
+      ctx.strokeStyle = hoverStroke();
       ctx.lineWidth = 2;
       ctx.strokeRect(rx, ry, rw, rh);
     }
@@ -798,30 +923,31 @@ function drawColumns() {
 
       const fontSize = Math.min(12, Math.max(7, Math.min(rw/10, rh/2.5)));
       ctx.font = `500 ${fontSize}px -apple-system, system-ui, sans-serif`;
-      ctx.fillStyle = isHovered ? "#fff" : "rgba(255,255,255,0.9)";
+      ctx.fillStyle = labelPrimary(isHovered);
       ctx.textBaseline = "top";
       ctx.textAlign = "left";
 
-      let title = r.title;
+      let title = r.title_jobbank || r.title;
+      const origTitle = title;
       const maxW = rw - 6;
       while (title.length > 4 && ctx.measureText(title).width > maxW) title = title.slice(0, -1);
-      if (title !== r.title) title = title.slice(0, -1) + "…";
+      if (title !== origTitle) title = title.slice(0, -1) + "…";
       ctx.fillText(title, rx + 4, ry + 2);
 
       if (rh > 24 && rw > 48) {
-        const outlook = r.outlook != null ? (r.outlook > 0 ? "+" : "") + r.outlook + "%" : "";
+        const outlookText = shortOutlook(r.outlook_desc);
         const jobs = r.jobs ? "· " + formatNumber(r.jobs) : "";
         const fs2 = Math.max(7, fontSize - 2);
         ctx.font = `400 ${fs2}px -apple-system, system-ui, sans-serif`;
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.fillText([outlook, jobs].filter(Boolean).join(" "), rx + 4, ry + 2 + fontSize + 2);
+        ctx.fillStyle = labelSecondary();
+        ctx.fillText([outlookText, jobs].filter(Boolean).join(" "), rx + 4, ry + 2 + fontSize + 2);
       }
 
       if (rh > 40 && rw > 60 && r.pay) {
         const fs3 = Math.max(7, fontSize - 2);
         ctx.font = `400 ${fs3}px -apple-system, system-ui, sans-serif`;
-        ctx.fillStyle = "rgba(255,255,255,0.35)";
-        ctx.fillText("$" + Math.round(r.pay/1000) + "K", rx + 4, ry + 2 + fontSize * 2 + 4);
+        ctx.fillStyle = labelTertiary();
+        ctx.fillText("$" + Math.round(r.pay/1000) + "K/yr", rx + 4, ry + 2 + fontSize * 2 + 4);
       }
 
       ctx.restore();
@@ -990,13 +1116,25 @@ function resize() {
   else { layoutColumns(); drawColumns(); }
 }
 
-// ── Gradient legend ─────────────────────────────────────────────────────
+// ── Gradient legends ─────────────────────────────────────────────────────
 
 function drawGradientLegend() {
   const c = document.getElementById("gradientLegend");
   const gctx = c.getContext("2d");
   for (let x = 0; x < 80; x++) {
     gctx.fillStyle = exposureColorCSS(x / 79 * 10, 1);
+    gctx.fillRect(x, 0, 1, 8);
+  }
+}
+
+function drawOutlookLegend() {
+  const c = document.getElementById("outlookLegend");
+  if (!c) return;
+  const gctx = c.getContext("2d");
+  // Surplus (-8) → Balance (2) → Shortage (12) mapped to 0..1
+  for (let x = 0; x < 80; x++) {
+    const outlook = -8 + (x / 79) * 20; // -8 to +12
+    gctx.fillStyle = outlookColorCSS(outlook, 1);
     gctx.fillRect(x, 0, 1, 8);
   }
 }
@@ -1011,6 +1149,8 @@ fetch("data.json")
     buildFilterChips();
     computeStats();
     drawGradientLegend();
+    drawOutlookLegend();
+    applyTheme();
     resize();
   });
 

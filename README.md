@@ -182,3 +182,23 @@ Steps 1–3 and 5 are deterministic and fast (seconds). Step 1b queries the Job 
 - **Canadian data:** [Statistics Canada](https://www.statcan.gc.ca) · [Employment and Social Development Canada](https://www.canada.ca/en/employment-social-development.html) · [Job Bank](https://www.jobbank.gc.ca)
 - **AI scoring:** [GPT-4o-mini](https://platform.openai.com/docs/models/gpt-4o-mini) via [OpenAI API](https://platform.openai.com)
 - **Occupation classification:** [National Occupational Classification (NOC) 2021](https://www.statcan.gc.ca/en/subjects/standard/noc/2021/indexV1)
+
+---
+
+## How to cite this project
+
+If you use this repository in research, policy work, reporting, or derivative tools, please cite it as:
+
+Krunal. (2026). *AI Exposure of the Canadian Job Market* [Computer software]. GitHub. https://github.com/krunal16-c/jobs
+
+You can also use this BibTeX entry:
+
+```bibtex
+@software{krunal2026_ai_exposure_canada,
+	author = {Krunal},
+	title = {AI Exposure of the Canadian Job Market},
+	year = {2026},
+	url = {https://github.com/<your-username>/jobs},
+	note = {Adapted from karpathy/jobs using Canadian data sources (Statistics Canada, ESDC, Job Bank)}
+}
+```

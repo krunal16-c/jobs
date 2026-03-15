@@ -26,13 +26,22 @@ def main():
         reader = csv.DictReader(f)
         rows = list(reader)
 
+    # Load scraped Job Bank data (titles + requirements) keyed by slug
+    jb_data = {}
+    if os.path.exists("occupations.json"):
+        with open("occupations.json") as f:
+            occ_list = json.load(f)
+        jb_data = {o["slug"]: o for o in occ_list}
+
     # Merge
     data = []
     for row in rows:
         slug = row["slug"]
         score = scores.get(slug, {})
+        jb = jb_data.get(slug, {})
         data.append({
             "title": row["title"],
+            "title_jobbank": jb.get("title_jobbank") or None,
             "slug": slug,
             "noc_code": row.get("noc_code", ""),
             "category": row["category"],
@@ -41,6 +50,7 @@ def main():
             "outlook": int(row["outlook_pct"]) if row["outlook_pct"] else None,
             "outlook_desc": row["outlook_desc"],
             "education": row["entry_education"],
+            "education_req": jb.get("education_req") or None,
             "exposure": score.get("exposure"),
             "exposure_rationale": score.get("rationale"),
             "url": row.get("url", ""),
