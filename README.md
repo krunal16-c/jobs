@@ -209,7 +209,7 @@ You can also use this BibTeX entry:
 	author = {Krunal},
 	title = {AI Exposure of the Canadian Job Market},
 	year = {2026},
-	url = {https://github.com/<your-username>/jobs},
+	url = {https://github.com/krunal16-c/jobs},
 	note = {Adapted from karpathy/jobs using Canadian data sources (Statistics Canada, ESDC, Job Bank)}
 }
 ```
