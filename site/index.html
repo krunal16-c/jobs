@@ -14,7 +14,8 @@
   --fg2: #888894;
   --border: rgba(255,255,255,0.06);
   --hbar-track: rgba(255,255,255,0.04);
-  --sidebar-w: 232px;
+  --accent: #4a9eff;
+  --sidebar-w: 240px;
 }
 body.light {
   --bg: #f2f2f7;
@@ -23,6 +24,7 @@ body.light {
   --fg2: #6b6b80;
   --border: rgba(0,0,0,0.08);
   --hbar-track: rgba(0,0,0,0.06);
+  --accent: #0070f3;
 }
 
 body {
@@ -47,20 +49,101 @@ body {
   gap: 18px;
 }
 
+/* Sidebar top row: brand + theme toggle */
+.sidebar-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.sidebar-brand { flex: 1; min-width: 0; }
 #sidebar h1 {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.3;
+  padding-right: 4px;
 }
 #sidebar .subtitle {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--fg2);
   margin-top: 4px;
   line-height: 1.5;
 }
 #sidebar .subtitle a { color: var(--fg2); text-decoration: none; }
 #sidebar .subtitle a:hover { color: var(--fg); }
+
+/* Methodology call-to-action button */
+.methodology-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 10px;
+  background: rgba(74,158,255,0.08);
+  border: 1px solid rgba(74,158,255,0.3);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s;
+  text-align: center;
+}
+.methodology-btn:hover {
+  background: rgba(74,158,255,0.16);
+  border-color: rgba(74,158,255,0.5);
+  text-decoration: none;
+}
+body.light .methodology-btn {
+  background: rgba(0,112,243,0.06);
+  border-color: rgba(0,112,243,0.25);
+}
+body.light .methodology-btn:hover {
+  background: rgba(0,112,243,0.12);
+}
+
+/* Exposure range slider (scatter view) */
+.range-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.range-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.range-row-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--fg2);
+}
+.range-row-label strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+input[type=range].score-slider {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  margin: 0;
+}
+.range-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--fg2);
+  padding: 4px 0 0;
+}
+.range-display .rdval {
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 13px;
+}
 
 .stat-section {
   display: flex;
@@ -201,25 +284,22 @@ body {
 
 /* Light mode toggle */
 #themeToggle {
-  position: absolute;
-  top: 14px;
-  right: 12px;
   background: none;
   border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--fg2);
   transition: all 0.15s;
-  z-index: 20;
   flex-shrink: 0;
+  margin-top: 2px;
 }
-#themeToggle:hover { color: var(--fg); background: var(--hbar-track); }
+#themeToggle:hover { color: var(--fg); background: var(--hbar-track); border-color: rgba(128,128,128,0.3); }
 
 /* Filter chips */
 .filter-chips {
@@ -288,7 +368,7 @@ canvas#canvas {
   font-weight: 600;
   font-size: 14px;
   margin-bottom: 6px;
-  color: #fff;
+  color: var(--fg);
 }
 #tooltip .tt-exposure {
   font-size: 12px;
@@ -335,19 +415,47 @@ canvas#canvas {
 <body>
 
 <div id="sidebar">
-  <button id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
-  <div>
-    <h1>AI Exposure of the Canadian Job Market</h1>
-    <div class="subtitle">516 occupations · colour = AI exposure<br>
-    Data: <a href="https://www.canada.ca/en/employment-social-development/services/job-bank.html">Job Bank</a> &amp;
-    <a href="https://www.statcan.gc.ca">StatCan</a> · scored by GPT-4o-mini<br>
-    <a href="about.html">Methodology</a> ·
-    <a href="https://github.com/karpathy/jobs">Based on karpathy/jobs</a></div>
+
+  <!-- Header: title + theme toggle in same row -->
+  <div class="sidebar-top">
+    <div class="sidebar-brand">
+      <h1>AI Exposure of the Canadian Job Market</h1>
+      <div class="subtitle">516 occupations · colour = AI exposure<br>
+      <a href="https://www.canada.ca/en/employment-social-development/services/job-bank.html">Job Bank</a> &amp;
+      <a href="https://www.statcan.gc.ca">StatCan</a> · GPT-4o-mini ·
+      <a href="https://github.com/karpathy/jobs">karpathy/jobs</a></div>
+    </div>
+    <button id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
+
+  <!-- Methodology prominent link -->
+  <a href="about.html" class="methodology-btn">📊 Methodology &amp; Stats</a>
 
   <div class="view-toggle">
     <button class="active" onclick="setView('treemap')">Treemap</button>
     <button onclick="setView('scatter')">Exposure vs Outlook</button>
+  </div>
+
+  <!-- Exposure score range slider — scatter view only -->
+  <div class="stat-section" id="scoreRangeSection" style="display:none;">
+    <h3>Exposure score range</h3>
+    <div class="range-block">
+      <div class="range-row">
+        <div class="range-row-label"><span>Min</span><strong id="rangeMinLabel">1</strong></div>
+        <input type="range" class="score-slider" id="rangeMin" min="1" max="10" value="1"
+          oninput="onRangeChange()">
+      </div>
+      <div class="range-row">
+        <div class="range-row-label"><span>Max</span><strong id="rangeMaxLabel">10</strong></div>
+        <input type="range" class="score-slider" id="rangeMax" min="1" max="10" value="10"
+          oninput="onRangeChange()">
+      </div>
+      <div class="range-display">
+        Showing scores <span class="rdval" id="rangeDisplayMin">1</span>
+        –
+        <span class="rdval" id="rangeDisplayMax">10</span>
+      </div>
+    </div>
   </div>
 
   <div class="stat-section">
@@ -599,11 +707,37 @@ let dpr = window.devicePixelRatio || 1;
 const MARGIN = 12;
 const GAP = 1.5;
 
+let scatterMin = 1, scatterMax = 10;
+
+function onRangeChange() {
+  let mn = parseInt(document.getElementById("rangeMin").value);
+  let mx = parseInt(document.getElementById("rangeMax").value);
+  if (mn > mx) {
+    // Snap: whichever was just moved becomes the constraint
+    if (document.activeElement === document.getElementById("rangeMin")) mn = mx;
+    else mx = mn;
+    document.getElementById("rangeMin").value = mn;
+    document.getElementById("rangeMax").value = mx;
+  }
+  scatterMin = mn;
+  scatterMax = mx;
+  document.getElementById("rangeMinLabel").textContent = mn;
+  document.getElementById("rangeMaxLabel").textContent = mx;
+  document.getElementById("rangeDisplayMin").textContent = mn;
+  document.getElementById("rangeDisplayMax").textContent = mx;
+  hovered = null;
+  hideTooltip();
+  layoutColumns();
+  drawColumns();
+}
+
 function setView(view) {
   currentView = view;
   document.querySelectorAll(".view-toggle button").forEach(b => b.classList.remove("active"));
   document.querySelector(`.view-toggle button[onclick="setView('${view}')"]`).classList.add("active");
-  document.getElementById("scatterLegend").style.display = view === "scatter" ? "" : "none";
+  const isScatter = view === "scatter";
+  document.getElementById("scatterLegend").style.display = isScatter ? "" : "none";
+  document.getElementById("scoreRangeSection").style.display = isScatter ? "" : "none";
   hovered = null;
   hideTooltip();
   resize();
@@ -825,6 +959,7 @@ function layoutColumns() {
   let totalJobs = 0;
   for (const d of data) {
     if (d.exposure == null) continue;
+    if (d.exposure < scatterMin || d.exposure > scatterMax) continue;
     if (!byExposure[d.exposure]) byExposure[d.exposure] = [];
     byExposure[d.exposure].push(d);
     totalJobs += d.jobs || 0;
