@@ -420,10 +420,9 @@ canvas#canvas {
   <div class="sidebar-top">
     <div class="sidebar-brand">
       <h1>AI Exposure of the Canadian Job Market</h1>
-      <div class="subtitle">516 occupations · colour = AI exposure<br>
+      <div class="subtitle">516 occupations · colour = AI exposure · hover for robotics risk<br>
       <a href="https://www.canada.ca/en/employment-social-development/services/job-bank.html">Job Bank</a> &amp;
-      <a href="https://www.statcan.gc.ca">StatCan</a> · GPT-4o-mini ·
-      <a href="https://github.com/karpathy/jobs">karpathy/jobs</a></div>
+      <a href="https://www.statcan.gc.ca">StatCan</a> · GPT-4o-mini</div>
     </div>
     <button id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
@@ -496,13 +495,13 @@ canvas#canvas {
   </div>
 
   <div class="stat-section">
-    <h3>Income in high-exposure jobs (7+)</h3>
+    <h3>Payroll in high AI-exposure jobs (7+)</h3>
     <div class="stat-big" id="statWages">—</div>
     <div class="stat-label" id="statWagesDesc">combined 2020 employment income (CAD)</div>
   </div>
 
   <div class="gradient-legend">
-    <span>Low AI risk</span>
+    <span>Low AI exposure</span>
     <canvas id="gradientLegend" width="80" height="8"></canvas>
     <span>High</span>
   </div>
@@ -561,17 +560,39 @@ function cellAlpha(hov) { return hov ? (isLight ? 0.92 : 0.85) : (isLight ? 0.72
 
 // ── Filters ─────────────────────────────────────────────────────────────
 
+// Robotics/physical automation risk by NOC major group
+// Based on: Brookfield Institute (2016), Statistics Canada (Lu, 2019), IFR (2023)
+const ROBOTICS_RISK = {
+  "Management occupations":                    "Low",
+  "Business, finance and administration":      "Low",
+  "Natural and applied sciences":              "Low",
+  "Health occupations":                        "Low",
+  "Education, law and social services":        "Low",
+  "Art, culture, recreation and sport":        "Low",
+  "Sales and service":                         "Moderate",
+  "Trades, transport and equipment operators": "High",
+  "Natural resources and agriculture":         "High",
+  "Manufacturing and utilities":               "Very High",
+};
+
+const ROBOTICS_HIGH_CATS = new Set([
+  "Trades, transport and equipment operators",
+  "Natural resources and agriculture",
+  "Manufacturing and utilities",
+]);
+
 const FILTERS = [
-  { id: "all",       label: "All",           fn: () => true },
-  { id: "shortage",  label: "🔴 In Demand",  fn: d => d.outlook_desc && d.outlook_desc.includes("Shortage") },
-  { id: "surplus",   label: "⬇ Surplus",    fn: d => d.outlook_desc && d.outlook_desc.includes("Surplus") },
-  { id: "highpay",   label: "💰 $90K+",      fn: d => d.pay && d.pay >= 90000 },
-  { id: "trades",    label: "🔧 Trades",     fn: d => d.category === "Trades, transport and equipment operators" },
-  { id: "health",    label: "🏥 Health",     fn: d => d.category === "Health occupations" },
-  { id: "business",  label: "📊 Business",   fn: d => d.category === "Business, finance and administration" },
-  { id: "stem",      label: "💻 STEM",       fn: d => d.category === "Natural and applied sciences" },
-  { id: "highexp",   label: "🤖 High AI",    fn: d => d.exposure != null && d.exposure >= 7 },
-  { id: "lowexp",    label: "🛡 Low AI",     fn: d => d.exposure != null && d.exposure <= 2 },
+  { id: "all",       label: "All",             fn: () => true },
+  { id: "shortage",  label: "🔴 In Demand",    fn: d => d.outlook_desc && d.outlook_desc.includes("Shortage") },
+  { id: "surplus",   label: "⬇ Surplus",      fn: d => d.outlook_desc && d.outlook_desc.includes("Surplus") },
+  { id: "highpay",   label: "💰 $90K+",        fn: d => d.pay && d.pay >= 90000 },
+  { id: "trades",    label: "🔧 Trades",       fn: d => d.category === "Trades, transport and equipment operators" },
+  { id: "health",    label: "🏥 Health",       fn: d => d.category === "Health occupations" },
+  { id: "business",  label: "📊 Business",     fn: d => d.category === "Business, finance and administration" },
+  { id: "stem",      label: "💻 STEM",         fn: d => d.category === "Natural and applied sciences" },
+  { id: "highexp",   label: "🤖 High AI",      fn: d => d.exposure != null && d.exposure >= 7 },
+  { id: "lowexp",    label: "🛡 Low AI",       fn: d => d.exposure != null && d.exposure <= 2 },
+  { id: "robotics",  label: "⚙️ Robotics Risk", fn: d => ROBOTICS_HIGH_CATS.has(d.category) },
 ];
 
 let activeFilter = "all";
@@ -912,6 +933,9 @@ function showTooltip(d, mx, my) {
     eduText = eduLabel(d.education);
   }
 
+  const roboticsRisk = ROBOTICS_RISK[d.category] || "Low";
+  const roboticsColor = { "Very High": "#e05c5c", "High": "#e0884a", "Moderate": "#e0b44a", "Low": "#5cd65c" }[roboticsRisk];
+
   tt.querySelector(".tt-stats").innerHTML = `
     <span class="label">Median income (2020)</span><span class="value">${formatPay(d.pay)}</span>
     <span class="label">Employment 2023</span><span class="value">${formatNumber(d.jobs)}</span>
@@ -919,6 +943,7 @@ function showTooltip(d, mx, my) {
     <span class="label">Education</span><span class="value" style="text-align:right;font-size:10px;">${eduText}</span>
     <span class="label">Category</span><span class="value" style="text-align:right;font-size:10px;">${d.category}</span>
     <span class="label">NOC 2021</span><span class="value">${d.noc_code || "—"}</span>
+    <span class="label">Robotics risk</span><span class="value" style="color:${roboticsColor};font-weight:600;">${roboticsRisk}</span>
   `;
 
   tt.querySelector(".tt-rationale").textContent = d.exposure_rationale || "";

@@ -26,62 +26,79 @@ API_URL = "https://api.openai.com/v1/chat/completions"
 
 SYSTEM_PROMPT = """\
 You are an expert analyst evaluating how exposed different occupations are to \
-AI. You will be given a description of a Canadian occupation from the National \
-Occupational Classification (NOC) 2021 system, including employment statistics \
-from the Canadian Occupational Projection System (COPS).
+AI for a Canadian labour market study. You will be given a description of a \
+Canadian occupation from the National Occupational Classification (NOC) 2021 \
+system, including employment statistics from the Canadian Occupational \
+Projection System (COPS 2024–2033).
 
-Rate the occupation's overall **AI Exposure** on a scale from 0 to 10.
+Rate the occupation's **AI Exposure** on a scale from 0 to 10.
 
-AI Exposure measures: how much will AI reshape this occupation? Consider both \
-direct effects (AI automating tasks currently done by humans) and indirect \
-effects (AI making each worker so productive that fewer are needed).
+CRITICAL SCOPE: This score measures ONLY *cognitive/digital* AI exposure — \
+how much language models, AI agents, and digital automation will reshape the \
+knowledge-work and information-processing components of this occupation. \
+Do NOT factor in industrial robotics, autonomous vehicles, or physical \
+automation machinery. Those are a separate dimension. A welder scores low \
+even though welding robots exist; a truck driver scores low even though \
+autonomous vehicles are coming. Focus only on whether AI software changes \
+the cognitive tasks of the job.
 
-A key signal is whether the job's work product is fundamentally digital. If \
-the job can be done entirely from a home office on a computer — writing, \
+AI Exposure measures: how much will cognitive AI (LLMs, agents, RPA, \
+generative AI) reshape this occupation? Consider both direct effects (AI \
+doing the cognitive/digital work) and indirect effects (AI making each \
+worker so productive that fewer are needed for the same output).
+
+The key signal is whether the job's work product is fundamentally digital. \
+If the job can be done entirely from a home office on a computer — writing, \
 coding, analyzing, communicating — then AI exposure is inherently high (7+), \
-because AI capabilities in digital domains are advancing rapidly. Even if \
-today's AI can't handle every aspect of such a job, the trajectory is steep \
-and the ceiling is very high. Conversely, jobs requiring physical presence, \
-manual skill, or real-time human interaction in the physical world have a \
-natural barrier to AI exposure.
+because AI capabilities in digital domains are advancing rapidly. Conversely, \
+jobs requiring physical presence, manual skill, or real-time human presence \
+in the physical world have a natural barrier to cognitive AI exposure.
 
-Use these anchors to calibrate your score:
+Use these Canadian-calibrated anchors:
 
-- **0–1: Minimal exposure.** The work is almost entirely physical, hands-on, \
-or requires real-time human presence in unpredictable environments. AI has \
-essentially no impact on daily work. \
-Examples: roofer, landscaper, commercial diver.
+- **0–1: Minimal.** Almost entirely physical, hands-on, or unpredictable \
+field work. AI has essentially no impact on the daily core tasks. \
+Examples: roofer, landscaper, commercial diver, underground miner, \
+oil field worker.
 
-- **2–3: Low exposure.** Mostly physical or interpersonal work. AI might help \
-with minor peripheral tasks (scheduling, paperwork) but doesn't touch the \
-core job. \
-Examples: electrician, plumber, firefighter, dental hygienist.
+- **2–3: Low.** Mostly physical or interpersonal work. AI might assist with \
+minor paperwork or scheduling but doesn't touch the core job. \
+Examples: electrician, plumber, firefighter, dental hygienist, welder, \
+heavy equipment operator, forest harvesting worker.
 
-- **4–5: Moderate exposure.** A mix of physical/interpersonal work and \
-knowledge work. AI can meaningfully assist with the information-processing \
-parts but a substantial share of the job still requires human presence. \
-Examples: registered nurse, police officer, veterinarian.
+- **4–5: Moderate.** A blend of physical/interpersonal and knowledge work. \
+AI meaningfully assists the information-processing parts but a substantial \
+share still requires human presence. \
+Examples: registered nurse, police officer, veterinarian, social worker, \
+secondary school teacher, construction manager.
 
-- **6–7: High exposure.** Predominantly knowledge work with some need for \
-human judgment, relationships, or physical presence. AI tools are already \
-useful and workers using AI may be substantially more productive. \
-Examples: teacher, manager, accountant, journalist.
+- **6–7: High.** Predominantly knowledge work with some need for human \
+judgment, relationships, or physical presence. AI tools already provide \
+significant productivity gains. \
+Examples: financial advisor, accountant, journalist, college professor, \
+HR manager, business analyst, family lawyer.
 
-- **8–9: Very high exposure.** The job is almost entirely done on a computer. \
-All core tasks — writing, coding, analyzing, designing, communicating — are \
-in domains where AI is rapidly improving. The occupation faces major \
-restructuring. \
-Examples: software developer, graphic designer, translator, data analyst, \
-paralegal, copywriter.
+- **8–9: Very high.** Job is almost entirely done on a computer. Core tasks \
+— writing, coding, analyzing, designing, communicating — are all domains \
+where AI is rapidly improving. Major restructuring likely. \
+Examples: software developer, graphic designer, translator, paralegal, \
+data analyst, technical writer, copywriter, web designer.
 
-- **10: Maximum exposure.** Routine information processing, fully digital, \
-with no physical component. AI can already do most of it today. \
-Examples: data entry clerk, telemarketer.
+- **10: Maximum.** Routine information processing, fully digital, no \
+physical component. AI can already do most of it today. \
+Examples: data entry clerk, telemarketer, routine transcription roles.
+
+In your rationale, be specific about which tasks within the Canadian context \
+drive the score. Reference whether the occupation involves digital-first work \
+or physical/interpersonal work that limits AI exposure. If the occupation has \
+high physical automation (robotics) risk but low cognitive AI exposure, \
+explicitly acknowledge this distinction so readers understand the occupation \
+may still face technological displacement through a different mechanism.
 
 Respond with ONLY a JSON object in this exact format, no other text:
 {
   "exposure": <0-10>,
-  "rationale": "<2-3 sentences explaining the key factors>"
+  "rationale": "<2-3 sentences explaining the key factors driving the score>"
 }\
 """
 

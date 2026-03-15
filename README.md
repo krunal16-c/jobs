@@ -8,11 +8,11 @@ Mapping how susceptible every occupation in the Canadian economy is to AI and au
 
 ## What it shows
 
-An interactive treemap of **516 Canadian occupations** (NOC 2021). Each rectangle's area is proportional to the number of Canadians employed in that occupation. The colour runs green → red based on **AI Exposure** — a 0–10 score of how much AI is expected to reshape the work.
+An interactive treemap of **516 Canadian occupations** (NOC 2021). Each rectangle's area is proportional to the number of Canadians employed in that occupation. The colour runs green → red based on **AI Exposure** — a 0–10 score of how much cognitive AI is expected to reshape the work.
 
 A second view, **Exposure vs Outlook**, stacks occupations into columns by AI exposure score with colour showing labour market outlook (surplus to shortage). An exposure score range slider lets you narrow columns to any subset of scores (e.g. 4–8 only).
 
-The site supports **light and dark mode** (persisted via localStorage), ten category **filter chips**, and a **Methodology & Stats** page with verified job-weighted statistics. Occupation names are sourced directly from Job Bank's canonical titles; tooltips show the actual employment requirements scraped from Job Bank's requirements pages.
+The site supports **light and dark mode** (persisted via localStorage), eleven category **filter chips** (including a dedicated **Robotics Risk** filter for manufacturing, trades, and natural resource sectors), and a **Methodology & Stats** page with verified job-weighted statistics. Hovering any occupation shows its **robotics/physical automation risk** alongside the AI exposure score — these are two independent dimensions that together give a complete picture of technological displacement. Occupation names are sourced directly from Job Bank's canonical titles; tooltips show employment requirements scraped from Job Bank's requirements pages.
 
 ---
 
@@ -23,8 +23,8 @@ All data is publicly available under the Open Government Licence – Canada.
 | Source | Publisher | What it provides |
 |--------|-----------|-----------------|
 | [Canadian Occupational Projection System (COPS) 2024–2033](https://open.canada.ca/data/en/dataset/e80851b8-de68-43bd-a85c-c72e1b3a3890) | ESDC | Employment 2023, projected job openings 2024–2033, future & recent labour market conditions |
-| [3-Year Employment Outlooks 2025–2027](https://open.canada.ca/data/en/dataset/b0e112e9-cf53-4e79-8838-23cd98debe5b) | ESDC / Job Bank | Job outlook ratings (Very Good / Good / Moderate / Limited / Very Limited / Undetermined) by occupation and province |
-| [Employee wages by occupation, annual — Table 14-10-0417](https://www150.statcan.gc.ca/n1/tbl/csv/14100417-eng.zip) | Statistics Canada (LFS) | Median hourly wages by broad occupational group, 1997–2013 |
+| [3-Year Employment Outlooks 2025–2027](https://open.canada.ca/data/en/dataset/b0e112e9-cf53-4e79-8838-23cd98debe5b) | ESDC / Job Bank | Job outlook ratings (Shortage / Balance / Surplus) by occupation and province |
+| [Table 98-10-0586-01 (2021 Census)](https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=9810058601) | Statistics Canada | Median annual employment income by NOC 2021 unit group, income reference year 2020 |
 | [National Occupational Classification (NOC) 2021](https://www.statcan.gc.ca/en/subjects/standard/noc/2021/indexV1) | Statistics Canada | Occupation titles, 5-digit codes, TEER levels, major group structure |
 | [Job Bank](https://www.jobbank.gc.ca) | ESDC | Canonical occupation titles, employment requirements, and profile URLs (scraped via `scrape_jobbank.py`) |
 
@@ -56,9 +56,11 @@ The **516 occupations** come from the COPS 2024–2033 summary CSV, which lists 
 
 ## AI exposure scoring
 
-Each occupation is scored 0–10 on a single axis: **how much will AI reshape this occupation?**
+Each occupation is scored 0–10 on a single axis: **how much will cognitive AI reshape this occupation?**
 
-The score captures both direct automation (AI doing the tasks currently done by humans) and indirect effects (AI making each worker so productive that fewer workers are needed). A key signal is whether the work product is fundamentally digital — if a job can be done entirely from a computer, AI exposure is inherently high.
+The score measures *cognitive/digital* automation only — language models, AI agents, and RPA tools acting on information-processing tasks. It explicitly excludes industrial robots, autonomous vehicles, and physical automation machinery. A welder scores low even though welding robots exist; a long-haul truck driver scores low even though autonomous vehicles are coming. Physical automation risk is surfaced separately (see Robotics below).
+
+The score captures both direct automation (AI doing the cognitive tasks currently done by humans) and indirect effects (AI making each worker so productive that fewer workers are needed). A key signal is whether the work product is fundamentally digital — if a job can be done entirely from a computer, AI exposure is inherently high.
 
 **Scoring is done by an LLM** (GPT-4o-mini via OpenAI) reading a structured Markdown description of the occupation. The description is generated from COPS data and includes: NOC code, TEER level, major category, employment figures, labour market conditions, and projected job openings.
 
@@ -66,20 +68,38 @@ The score captures both direct automation (AI doing the tasks currently done by 
 
 | Score | Tier | Canadian examples |
 |-------|------|-------------------|
-| 0–1 | Minimal | Underground miners, roofers, landscapers |
-| 2–3 | Low | Electricians, plumbers, firefighters, personal support workers |
-| 4–5 | Moderate | Registered nurses, retail supervisors, general practitioners |
-| 6–7 | High | Teachers, accountants, civil engineers, HR managers |
-| 8–9 | Very high | Software developers, paralegals, data scientists, editors |
-| 10 | Maximum | Court reporters, medical transcriptionists, data entry clerks |
+| 0–1 | Minimal | Underground miners, roofers, landscapers, oil field workers |
+| 2–3 | Low | Electricians, plumbers, firefighters, welders, heavy equipment operators |
+| 4–5 | Moderate | Registered nurses, police officers, veterinarians, social workers |
+| 6–7 | High | Teachers, accountants, engineers, HR managers, journalists |
+| 8–9 | Very high | Software developers, graphic designers, translators, paralegals |
+| 10 | Maximum | Data entry clerks — routine digital processing with no physical component |
 
-Current weighted average (job-weighted, all 516 occupations): **3.7 / 10**.
+Current weighted average (job-weighted, all 516 occupations): **3.8 / 10**.
+
+---
+
+## Robotics and physical automation
+
+Physical automation affects a *different* set of occupations than cognitive AI — primarily those scoring **low** on the AI Exposure axis. The tooltip for every occupation shows a **Robotics Risk** level (Low / Moderate / High / Very High) based on its NOC sector.
+
+| NOC Sector | Robotics risk | Drivers |
+|-----------|---------------|---------|
+| Manufacturing and utilities | Very High | Auto assembly robots (ON), food processing and packaging lines |
+| Trades, transport and equipment operators | High | Autonomous truck platforms, automated equipment |
+| Natural resources and agriculture | High | Mining haul trucks (Caterpillar AutoMine), robotic harvesters |
+| Sales and service | Moderate | Self-checkout (40%+ penetration), robotic food prep |
+| All other sectors | Low | Physical automation has minimal direct impact |
+
+Research basis: Brookfield Institute (2016) — 42% of Canadian jobs at high automation risk; Bank of Canada (2018) — ~2M jobs at high risk; OECD (2023) — ~27% at high risk; Acemoglu & Restrepo (2020) — each robot per 1,000 workers reduces employment-to-population ratio 0.18–0.34%.
+
+A set of **dual-threat occupations** face both cognitive AI and physical automation: transport truck drivers, cashiers, agricultural workers, warehouse pickers, postal workers, food processing labourers.
 
 ---
 
 ## Pipeline
 
-Seven scripts take you from raw government data to the website:
+Eight scripts take you from raw government data to the website:
 
 ```
 build_occupations.py   →  occupations.json   (516 NOC occupations + fallback URLs)
@@ -87,8 +107,9 @@ build_jobbank_urls.py  →  occupations.json   (upgrades to direct Job Bank prof
 scrape_jobbank.py      →  occupations.json   (adds canonical titles + requirements)
 generate_pages.py      →  pages/*.md         (one Markdown file per occupation)
 make_csv_ca.py         →  occupations.csv    (pay, jobs, outlook, education)
-score.py               →  scores.json        (AI exposure scores)
+score.py               →  scores.json        (AI exposure scores — cognitive AI only)
 build_site_data_ca.py  →  site/data.json     (merged, ready for frontend)
+make_prompt.py         →  prompt.md          (LLM-ready research document)
 ```
 
 See [`process.md`](process.md) for a detailed walkthrough of every calculation, data join, and design decision.
@@ -100,21 +121,24 @@ See [`process.md`](process.md) for a detailed walkthrough of every calculation, 
 | File / Directory | Description |
 |------------------|-------------|
 | `occupations.json` | 516 occupations: NOC title, canonical Job Bank title, NOC code, category, slug, URL, employment requirements |
-| `occupations.csv` | One row per occupation: median pay (CAD), employment 2023, outlook, education |
+| `occupations.csv` | One row per occupation: median pay (CAD, 2020), employment 2023, outlook, education |
 | `scores.json` | AI exposure scores 0–10 with LLM rationale, keyed by slug |
 | `pages/` | 516 Markdown files — one per occupation — used as LLM input for scoring |
+| `prompt.md` | Full research document (all 516 occupations + robotics analysis) for pasting into an LLM |
 | `data/cops_summary.csv` | COPS 2024–2033 summary (downloaded, 516 + aggregate rows) |
+| `data/census_wages/98100586.csv` | Statistics Canada 2021 Census median annual employment income by NOC 2021 unit group |
 | `data/outlook_ca.xlsx` | 3-year employment outlooks by occupation × province/region |
-| `site/index.html` | Self-contained frontend: treemap, scatter view, filter chips, sliders, light/dark mode |
-| `site/about.html` | Methodology & Stats page with verified job-weighted statistics; supports light/dark mode |
+| `site/index.html` | Self-contained frontend: treemap, scatter view, filter chips (incl. Robotics Risk), sliders, light/dark mode |
+| `site/about.html` | Methodology & Stats page with data sources, robotics research, and verified statistics |
 | `site/data.json` | Compiled dataset loaded by the frontend |
 | `build_occupations.py` | Step 1 — build occupation list from COPS |
 | `build_jobbank_urls.py` | Step 1b — fetch Job Bank concordance IDs, update profile URLs |
 | `scrape_jobbank.py` | Step 1c — scrape canonical titles and employment requirements from Job Bank |
 | `generate_pages.py` | Step 2 — generate Markdown descriptions |
-| `make_csv_ca.py` | Step 3 — compile structured CSV |
-| `score.py` | Step 4 — LLM scoring (OpenAI GPT-4o-mini) |
+| `make_csv_ca.py` | Step 3 — compile structured CSV (wages from 2021 Census) |
+| `score.py` | Step 4 — LLM scoring (OpenAI GPT-4o-mini); cognitive AI exposure only |
 | `build_site_data_ca.py` | Step 5 — merge into site/data.json |
+| `make_prompt.py` | Step 6 — generate prompt.md (all data + robotics research in one LLM-ready document) |
 
 ---
 
@@ -127,7 +151,7 @@ See [`process.md`](process.md) for a detailed walkthrough of every calculation, 
 | Data acquisition | Playwright scraping (BLS website) | CSV/XLSX downloads (Open Government Portal) |
 | Employment year | 2024 | 2023 |
 | Currency | USD | CAD |
-| Wage source | BLS OOH pages (scraped directly) | Stats Canada LFS 2013 median wages, inflation-adjusted to 2024 |
+| Wage source | BLS OOH pages (scraped directly) | Stats Canada 2021 Census median annual employment income (2020 reference year, CAD) |
 | Outlook format | % employment growth over 5 years | Labour market conditions: Shortage / Balance / Surplus |
 | Education classification | BLS entry-level education labels | NOC TEER (0–5) |
 | Occupation descriptions | Rich BLS HTML pages (duties, pay charts, work environment) | Generated Markdown from COPS data |

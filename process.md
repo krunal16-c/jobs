@@ -61,21 +61,22 @@ This dataset contains 3-year employment outlook ratings (2025–2027) for every 
 
 There is no national-level row in this file — the outlook is only given regionally. To get a single national figure per occupation, `generate_pages.py` and `make_csv_ca.py` take the **most common outlook value across all regions** for each occupation.
 
-### Stats Canada Wages — Table 14-10-0417
-**URL:** `https://www150.statcan.gc.ca/n1/tbl/csv/14100417-eng.zip`
-**File:** `data/wages_by_occ.zip` (~39 MB, compressed CSV)
+### Stats Canada Wages — 2021 Census Table 98-10-0586-01
+**URL:** `https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=9810058601`
+**File:** `data/census_wages/98100586.csv`
 
-This is the Labour Force Survey (LFS) annual wage table. It contains median hourly wages by **broad occupational group** (NOC major groups, not individual unit groups). The dataset covers 1997–2013.
+This is the 2021 Census of Population table reporting **median annual employment income** by NOC 2021 unit group. The income reference year is **2020** (census income always refers to the calendar year preceding the census).
 
-We use **2013 data only** (the most recent year) with the filter:
-- `REF_DATE = 2013`
-- `GEO = Canada`
-- `Wages = Median hourly wage rate`
-- `Type of work = Both full- and part-time employees`
-- `Gender = Total - Gender`
-- `Age group = 15 years and over`
+Filters applied when reading the file:
+- `GEO = Canada` (national totals only)
+- `Visible minority` = Total (all workers)
+- `Highest certificate, diploma or degree` = Total (all education levels)
+- `Work activity during the reference year` = Total
+- `Gender and age` = Total
 
-This gives one median hourly wage figure per broad occupational group (e.g. `Professional occupations in natural and applied sciences [21]: $36.36/hr`).
+This gives one median annual employment income figure per NOC 2021 5-digit unit group. **511 of 516 occupations** matched directly. The 5 senior manager codes (00011–00015) are suppressed individually by Statistics Canada for confidentiality; they are assigned the consolidated value published under code `00018` ($87,241).
+
+**Income year caveat:** 2020 was a pandemic year. Occupations in hospitality, tourism, recreation, arts, and personal services show depressed medians relative to a typical year due to pandemic-related job losses and reduced hours. These figures should be treated as a lower bound for those sectors.
 
 ---
 
@@ -193,37 +194,33 @@ The Employment Outlooks XLSX has no national-level rows. For each occupation, we
 
 ## Stage 4 — Building the structured CSV (`make_csv_ca.py`)
 
-**Input:** `occupations.json`, `data/cops_summary.csv`, `data/outlook_ca.xlsx`
+**Input:** `occupations.json`, `data/cops_summary.csv`, `data/outlook_ca.xlsx`, `data/census_wages/98100586.csv`
 **Output:** `occupations.csv`
 
 ### Employment
 
 Taken directly from COPS `Employment_emploi_2023`. 31 occupations have `N/A` (typically small-sample or suppressed occupations). Employment values are stored as raw integers in the CSV.
 
-### Wages — the inflation adjustment
+### Wages — 2021 Census unit-group incomes
 
-This is the most significant approximation in the project. The Stats Canada wage table (14-10-0417) only goes to 2013 — there is no publicly available Stats Canada CSV giving median hourly wages at the individual NOC unit-group level for recent years. (The Job Bank does publish this by province on its wages pages, but those pages require browser session state to render correctly.)
+Wages come from **Statistics Canada Table 98-10-0586-01** (2021 Census), which provides median annual employment income at the individual 5-digit NOC 2021 unit group level. This is a significant improvement over broad-group averages — each occupation has its own census-reported figure (in 2020 CAD).
 
-**What we have:** 2013 median hourly wages for ~50 broad occupational groups (NOC major groups), from the LFS.
+**Coverage:** 511 of 516 occupations matched directly. The 5 senior manager codes (00011–00015) are published by Statistics Canada as a single suppressed aggregate under code `00018` ($87,241); all five codes are assigned that value.
 
-**What we need:** 2024 median annual wages for 516 individual unit groups.
+**TEER-based fallback:** For any unmatched code (fewer than 5 in practice), a TEER-level estimate is used:
 
-**The calculation:**
+| TEER | Fallback annual wage |
+|------|---------------------|
+| 0 | $130,000 |
+| 1 | $95,000 |
+| 2 | $72,000 |
+| 3 | $58,000 |
+| 4 | $46,000 |
+| 5 | $38,000 |
 
-```
-hourly_2024 = hourly_2013 × 1.35
-annual_2024 = round(hourly_2024 × 2000)
-```
+**Hourly rate:** Derived by dividing the annual figure by 2,000 (a standard full-time equivalent, stored in the CSV for reference).
 
-The **1.35 inflation factor** represents approximately 3% per year compounded over 11 years (2013 → 2024): `1.03^11 ≈ 1.384`, rounded to 1.35. This is consistent with the Bank of Canada's average CPI growth over this period.
-
-The **2000 hours per year** is a standard full-time equivalent (52 weeks × ~38.5 hours = ~2,000 hours, matching the Stats Canada convention for full-time annual earnings calculations).
-
-**Mapping unit groups to wage groups:**
-
-Each 5-digit NOC code is mapped to its wage group using the first two digits of the code, which corresponds to the COPS major group. For example, all occupations with codes `21xxx` (Professional natural and applied sciences) are assigned the 2013 median wage for `Professional occupations in natural and applied sciences [21]: $36.36/hr`.
-
-**Limitations:** This approach assigns the same estimated wage to all unit groups within a major group. A petroleum engineer and a geographer are both `21xxx` codes but have very different salaries. The wage figures in this dataset are therefore **order-of-magnitude correct** (right occupational tier) but not precise. They are used for the "Exposure by pay" sidebar chart and the tooltip — users should treat them as approximate benchmarks, not precise salary figures.
+**Income year caveat:** 2020 is the income reference year — a pandemic year. Sectors hit by pandemic closures (hospitality, recreation, arts, personal services) have depressed medians that don't reflect typical earning conditions. These figures serve as approximate benchmarks, not precise salary data.
 
 ### Outlook — mapping to a numeric percentage
 
@@ -283,22 +280,30 @@ The NOC 2021 TEER (Training, Education, Experience, and Responsibilities) system
 **Input:** `pages/*.md` (516 Markdown files)
 **Output:** `scores.json`
 
-This script is adapted directly from karpathy/jobs with one change to the system prompt: references to the "Bureau of Labor Statistics" are replaced with references to the "National Occupational Classification (NOC) 2021 system" and "Canadian Occupational Projection System (COPS)".
+### Scope: cognitive AI only
+
+The scoring rubric was deliberately scoped to **cognitive/digital AI automation** only. The system prompt instructs the LLM:
+
+> *"This score measures ONLY cognitive/digital AI exposure — the impact of language models, AI agents, and digital automation on the information-processing components of a job. It does NOT measure industrial robots, autonomous vehicles, or physical automation machinery. A welder scores low even though welding robots exist; a truck driver scores low even though autonomous vehicles are coming."*
+
+This separation is important because physical automation (robotics) threatens a *different* set of occupations than cognitive AI, and combining them into a single score produces misleading results. Physical automation risk is computed separately from the NOC major group and surfaced in the tooltip.
 
 ### The scoring rubric
 
-Each occupation's Markdown is sent to the LLM with a system prompt that defines the 0–10 scale:
+Each occupation's Markdown is sent to the LLM with a system prompt defining the 0–10 scale using Canadian-specific examples:
 
-- **0–1 (Minimal):** Almost entirely physical or requires real-time human presence in unpredictable environments. AI has essentially no impact on daily work.
-- **2–3 (Low):** Mostly physical or interpersonal work. AI might help with minor peripheral tasks but doesn't touch the core job.
-- **4–5 (Moderate):** Mix of physical/interpersonal and knowledge work. AI can meaningfully assist the information-processing parts.
-- **6–7 (High):** Predominantly knowledge work with some need for human judgment, relationships, or physical presence.
-- **8–9 (Very high):** Almost entirely done on a computer. All core tasks (writing, coding, analyzing, designing) are in domains where AI is rapidly improving.
-- **10 (Maximum):** Routine information processing, fully digital, with no physical component. AI can already do most of it today.
+- **0–1 (Minimal):** Almost entirely physical or unpredictable field work. Examples: underground miners, roofers, oil field labourers, commercial divers.
+- **2–3 (Low):** Mostly physical or interpersonal. AI may assist peripheral paperwork but doesn't touch the core job. Examples: electricians, plumbers, welders, heavy equipment operators, firefighters.
+- **4–5 (Moderate):** Blend of physical and knowledge work. AI meaningfully assists information-processing parts. Examples: registered nurses, police officers, veterinarians, construction managers.
+- **6–7 (High):** Predominantly knowledge work with some interpersonal or physical component. Examples: accountants, engineers, teachers, HR managers, journalists, financial advisors.
+- **8–9 (Very high):** Almost entirely done on a computer. Examples: software developers, graphic designers, translators, paralegals, data analysts, web designers.
+- **10 (Maximum):** Routine digital processing, no physical component. AI can already do most of it today. Example: data entry clerks.
+
+The rationale is also instructed to acknowledge when an occupation has low AI exposure but high *physical automation* risk, so readers understand the occupation may still face technological displacement through a different mechanism.
 
 The LLM returns a JSON object:
 ```json
-{ "exposure": 7, "rationale": "2–3 sentence explanation of key factors" }
+{ "exposure": 4, "rationale": "2–3 sentence explanation of key factors" }
 ```
 
 ### API and model
@@ -306,14 +311,11 @@ The LLM returns a JSON object:
 - **Provider:** OpenAI (`https://api.openai.com/v1/chat/completions`)
 - **Default model:** `gpt-4o-mini` (fast, cheap, strong instruction-following)
 - **Temperature:** 0.2 (low, for consistency)
-- **Rate limiting:** 0.5 second delay between requests by default
+- **Rate limiting:** 0.3 second delay between requests by default
 - **API key:** Set `OPENAI_API_KEY` in `.env`
+- **Cost:** ~$0.50 for all 516 occupations with GPT-4o-mini
 
-Results are saved incrementally after each occupation — if the script is interrupted, it can be resumed without re-scoring already-cached occupations.
-
-### Existing scores from the US version
-
-43 occupations in the Canadian dataset have slugs that match occupations from the original karpathy/jobs `scores.json` (e.g. `financial-managers`, `receptionists`, `insurance-underwriters`). These cross-over scores are valid — the AI exposure of an occupation doesn't depend on which country it's in — and are retained to avoid unnecessary API calls.
+Results are saved incrementally after each occupation — if the script is interrupted, it can be resumed without re-scoring already-cached occupations. Use `--force` to re-score all occupations (e.g. after updating the system prompt).
 
 ---
 
@@ -356,7 +358,7 @@ The frontend is a self-contained single HTML file, adapted from karpathy/jobs. I
 
 ### Filter chips
 
-Ten predefined filter chips allow users to narrow the treemap to a subset of occupations matching standard Canadian job market categories:
+Eleven predefined filter chips allow users to narrow the treemap to a subset of occupations:
 
 | Filter | Criteria |
 |--------|----------|
@@ -370,6 +372,9 @@ Ten predefined filter chips allow users to narrow the treemap to a subset of occ
 | STEM | Category = "Natural and applied sciences" |
 | High AI | Exposure score ≥ 7 |
 | Low AI | Exposure score ≤ 2 |
+| Robotics Risk | Category in {Trades/transport, Natural resources/agriculture, Manufacturing/utilities} |
+
+The **Robotics Risk** filter surfaces the ~3.7M jobs in sectors with High or Very High physical automation exposure — the population most at risk from industrial robotics independently of their cognitive AI score.
 
 ### Light and dark mode
 
@@ -402,9 +407,10 @@ Two `<input type="range">` sliders (Min and Max, both 1–10) let the user narro
 Hovering any cell opens a tooltip with:
 - **Title**: `title_jobbank` if available, otherwise the NOC `title`; the NOC title shown below as "Also: …" when they differ
 - **AI Exposure**: score + animated fill bar
-- **Stats grid**: median pay, employment 2023, outlook, education/requirements, category, NOC code
+- **Stats grid**: median pay, employment 2023, outlook, education/requirements, category, NOC code, **robotics risk**
 - **Education / Requirements**: first `education_req` bullet (scraped from Job Bank) if available; falls back to the TEER-derived label
-- **Rationale**: LLM-generated 2–3 sentence explanation
+- **Robotics risk**: colour-coded level (Low=green, Moderate=yellow, High=orange, Very High=red) derived from the occupation's NOC major group using the `ROBOTICS_RISK` map
+- **Rationale**: LLM-generated 2–3 sentence explanation (explicitly scoped to cognitive AI impact)
 
 ### Sidebar statistics
 
@@ -416,30 +422,53 @@ Computed client-side from the loaded data:
 - **Breakdown** = jobs grouped into 5 exposure tiers (Minimal 0–1, Low 2–3, Moderate 4–5, High 6–7, Very High 8–10).
 - **Exposure by pay** = job-weighted average exposure within each CAD pay band.
 - **Exposure by education** = job-weighted average exposure within each TEER level (human-readable labels).
-- **Wages exposed** = `Σ(jobs × pay)` for occupations with exposure ≥ 7, displayed in billions of CAD (~$86B).
+- **Wages exposed** = `Σ(jobs × pay)` for occupations with exposure ≥ 7, displayed in billions of CAD (~$43B).
 
 ### Methodology page (`site/about.html`)
 
-A companion page explains all data sources, calculations, and limitations with verified job-weighted statistics. Key verified figures (from `site/data.json`):
+A companion page explains all data sources, calculations, limitations, and robotics/automation research with verified job-weighted statistics. Key verified figures (from `site/data.json`):
 
 - **20.1 million** jobs covered across 485 occupations with employment data
-- **3.7** weighted average AI exposure score
-- **50.2%** of jobs have low AI exposure (score ≤ 2)
-- **4.8%** of jobs have high AI exposure (score ≥ 7)
-- **$86 billion** in annual wages in high-exposure occupations
+- **3.8** weighted average AI exposure score
+- **46.2%** of jobs in Low AI-exposure occupations (score 2–3)
+- **3.2%** of jobs in Very High AI-exposure occupations (score 7+)
+- **$43 billion** annual payroll in high AI-exposure occupations (7+)
+- **~7.8M jobs** (Manufacturing + Trades + Natural resources) face high physical automation risk independent of their AI exposure score
+
+---
+
+## Stage 8 — Generating the research document (`make_prompt.py`)
+
+**Input:** `occupations.json`, `occupations.csv`, `scores.json`
+**Output:** `prompt.md`
+
+Generates a single large Markdown document suitable for pasting into an LLM for research and analysis. It contains:
+
+1. **Header and data sources** — Canadian context, NOC 2021, COPS, Statistics Canada, ESDC
+2. **Scoring methodology** — cognitive-AI-only scope with the robotics limitation callout
+3. **Aggregate statistics** — tier breakdown, pay-band chart, TEER education chart, NOC major group table (AI exposure + robotics risk per sector)
+4. **COPS outlook sections** — surplus and shortage occupations
+5. **Robotics and physical automation** section — 8-study research table, two-vector framework (cognitive AI vs. physical robotics with timelines), Canadian industry deep-dives (automotive ON, mining/oil sands AB, warehousing/logistics, agriculture BC/Prairies, food processing/retail), dual-threat occupations table, and regional concentration table by province
+6. **Full occupation table** — all 516 occupations sorted by AI exposure, with NOC code, 2020 CAD pay, 2023 employment, COPS outlook, TEER level, and LLM rationale
+
+The robotics section cites: Brookfield Institute (2016), OECD (2016, 2023), Bank of Canada (Georgieva et al., 2018), Statistics Canada (Lu, 2019), Acemoglu & Restrepo (2020), WEF Future of Jobs (2023), McKinsey (2023).
 
 ---
 
 ## Known limitations and approximations
 
-1. **Wages are estimated, not precise.** The 2013 LFS data scaled by a uniform inflation factor assigns the same estimated wage to all occupations within a broad major group. A petroleum engineer and a biological technologist both sit in the `21xxx` bracket and get the same number. Use the wage figures as rough tier indicators, not salary benchmarks.
+1. **AI Exposure score does not capture physical automation risk.** The score is explicitly scoped to cognitive/digital AI. Manufacturing, transport, and resource-sector workers scoring 1–3 on AI Exposure may still face significant displacement from industrial robots, autonomous vehicles, or mining automation systems. Use the Robotics Risk indicator alongside the AI score for a complete picture.
 
-2. **Employment data is 2023, not 2024.** COPS was updated to 2023 base-year employment. The US version uses 2024 BLS figures.
+2. **Income reference year is 2020 (pandemic year).** The 2021 Census income data reflects earnings during COVID-19. Occupations in hospitality, tourism, personal services, and arts show depressed medians that do not represent typical conditions. Treat these as lower bounds for those sectors.
 
-3. **Outlook is a proxy, not a percentage.** The numeric values assigned to COPS labels (e.g. `Strong risk of Shortage = +12`) are an artificial monotonic scale. They are not percentage employment change estimates, and should not be interpreted as such.
+3. **Employment data is 2023, not 2024.** COPS was updated to 2023 base-year employment. The US karpathy/jobs version uses 2024 BLS figures.
 
-4. **AI scores are LLM-generated from title and category, not from full job descriptions.** The original US version sent rich BLS page content (duties, tools, work environment) to the LLM. The Canadian pages are generated from COPS statistics, not scraped narrative descriptions. Scores are therefore based primarily on what the LLM knows about the occupation from its training data rather than from a detailed description. This is a limitation, but the LLM's world knowledge about "Software engineers and designers" or "Retail salespersons" is already substantial.
+4. **Outlook is a proxy, not a percentage.** The numeric values assigned to COPS labels (e.g. `Strong risk of Shortage = +12`) are an artificial monotonic scale used to order occupations on the scatter view. They are not percentage employment change estimates.
 
-5. **31 occupations have no employment data.** These occupations (typically small, specialized, or statistically suppressed) appear on the treemap at minimum size and are excluded from weighted statistics.
+5. **AI scores are LLM-generated from title and category, not full job descriptions.** The original US version sent rich BLS page content (duties, tools, work environment) to the LLM. Canadian pages are generated from COPS statistics. Scores rely on the LLM's world knowledge about each occupation rather than a detailed description — this is a limitation but the model's knowledge of "Software engineers" or "Retail salespersons" is already substantial.
 
-6. **Category assignment by code prefix is approximate.** A handful of occupations (the 5 in "Other") have code prefixes that don't fit cleanly into the 10 NOC major groups (e.g. codes starting with `61`). These are rare edge cases.
+6. **31 occupations have no employment data.** Statistically suppressed by Statistics Canada due to small sample sizes. These appear at minimum size on the treemap and are excluded from weighted statistics.
+
+7. **Robotics risk is sector-level, not occupation-level.** All occupations within Manufacturing/utilities get "Very High" robotics risk even though some roles in that sector (e.g. quality control managers) have limited exposure to physical automation. A more granular robotics scoring model would require task-level analysis.
+
+8. **Category assignment by code prefix is approximate.** A handful of occupations (the 5 in "Other") have code prefixes that don't fit cleanly into the 10 NOC major groups (e.g. codes starting with `61`). These are rare edge cases.
