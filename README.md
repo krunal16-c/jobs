@@ -10,7 +10,9 @@ Mapping how susceptible every occupation in the Canadian economy is to AI and au
 
 An interactive treemap of **516 Canadian occupations** (NOC 2021). Each rectangle's area is proportional to the number of Canadians employed in that occupation. The colour runs green → red based on **AI Exposure** — a 0–10 score of how much AI is expected to reshape the work.
 
-A second view, **Exposure vs Outlook**, stacks occupations into columns by AI exposure score with colour showing labour market outlook (surplus to shortage).
+A second view, **Exposure vs Outlook**, stacks occupations into columns by AI exposure score with colour showing labour market outlook (surplus to shortage). An exposure score range slider lets you narrow columns to any subset of scores (e.g. 4–8 only).
+
+The site supports **light and dark mode** (persisted via localStorage), ten category **filter chips**, and a **Methodology & Stats** page with verified job-weighted statistics. Occupation names are sourced directly from Job Bank's canonical titles; tooltips show the actual employment requirements scraped from Job Bank's requirements pages.
 
 ---
 
@@ -24,7 +26,7 @@ All data is publicly available under the Open Government Licence – Canada.
 | [3-Year Employment Outlooks 2025–2027](https://open.canada.ca/data/en/dataset/b0e112e9-cf53-4e79-8838-23cd98debe5b) | ESDC / Job Bank | Job outlook ratings (Very Good / Good / Moderate / Limited / Very Limited / Undetermined) by occupation and province |
 | [Employee wages by occupation, annual — Table 14-10-0417](https://www150.statcan.gc.ca/n1/tbl/csv/14100417-eng.zip) | Statistics Canada (LFS) | Median hourly wages by broad occupational group, 1997–2013 |
 | [National Occupational Classification (NOC) 2021](https://www.statcan.gc.ca/en/subjects/standard/noc/2021/indexV1) | Statistics Canada | Occupation titles, 5-digit codes, TEER levels, major group structure |
-| [Job Bank](https://www.jobbank.gc.ca) | ESDC | Occupation profile URLs used for linking from the visualization |
+| [Job Bank](https://www.jobbank.gc.ca) | ESDC | Canonical occupation titles, employment requirements, and profile URLs (scraped via `scrape_jobbank.py`) |
 
 ---
 
@@ -77,11 +79,12 @@ Current weighted average (job-weighted, all 516 occupations): **3.7 / 10**.
 
 ## Pipeline
 
-Six scripts take you from raw government data to the website:
+Seven scripts take you from raw government data to the website:
 
 ```
-build_occupations.py   →  occupations.json   (516 NOC occupations)
-build_jobbank_urls.py  →  occupations.json   (adds direct Job Bank profile URLs)
+build_occupations.py   →  occupations.json   (516 NOC occupations + fallback URLs)
+build_jobbank_urls.py  →  occupations.json   (upgrades to direct Job Bank profile URLs)
+scrape_jobbank.py      →  occupations.json   (adds canonical titles + requirements)
 generate_pages.py      →  pages/*.md         (one Markdown file per occupation)
 make_csv_ca.py         →  occupations.csv    (pay, jobs, outlook, education)
 score.py               →  scores.json        (AI exposure scores)
@@ -96,17 +99,18 @@ See [`process.md`](process.md) for a detailed walkthrough of every calculation, 
 
 | File / Directory | Description |
 |------------------|-------------|
-| `occupations.json` | 516 occupations: title, NOC code, category, slug, Job Bank URL |
+| `occupations.json` | 516 occupations: NOC title, canonical Job Bank title, NOC code, category, slug, URL, employment requirements |
 | `occupations.csv` | One row per occupation: median pay (CAD), employment 2023, outlook, education |
 | `scores.json` | AI exposure scores 0–10 with LLM rationale, keyed by slug |
 | `pages/` | 516 Markdown files — one per occupation — used as LLM input for scoring |
 | `data/cops_summary.csv` | COPS 2024–2033 summary (downloaded, 516 + aggregate rows) |
 | `data/outlook_ca.xlsx` | 3-year employment outlooks by occupation × province/region |
-| `site/index.html` | Self-contained frontend (treemap + scatter view + filter chips) |
-| `site/about.html` | Methodology page explaining all data sources, stats, and calculations |
+| `site/index.html` | Self-contained frontend: treemap, scatter view, filter chips, sliders, light/dark mode |
+| `site/about.html` | Methodology & Stats page with verified job-weighted statistics; supports light/dark mode |
 | `site/data.json` | Compiled dataset loaded by the frontend |
 | `build_occupations.py` | Step 1 — build occupation list from COPS |
-| `build_jobbank_urls.py` | Step 1b — fetch Job Bank concordance IDs and update profile URLs |
+| `build_jobbank_urls.py` | Step 1b — fetch Job Bank concordance IDs, update profile URLs |
+| `scrape_jobbank.py` | Step 1c — scrape canonical titles and employment requirements from Job Bank |
 | `generate_pages.py` | Step 2 — generate Markdown descriptions |
 | `make_csv_ca.py` | Step 3 — compile structured CSV |
 | `score.py` | Step 4 — LLM scoring (OpenAI GPT-4o-mini) |
@@ -128,7 +132,11 @@ See [`process.md`](process.md) for a detailed walkthrough of every calculation, 
 | Education classification | BLS entry-level education labels | NOC TEER (0–5) |
 | Occupation descriptions | Rich BLS HTML pages (duties, pay charts, work environment) | Generated Markdown from COPS data |
 | Education labels | BLS entry-level education labels | Human-readable (High school / Vocational / College / University+) |
+| Occupation titles | BLS OOH canonical titles | Job Bank canonical titles scraped via `scrape_jobbank.py` |
+| Employment requirements | Scraped from BLS OOH pages | Scraped from Job Bank requirements pages (462/516 occupations) |
 | Methodology page | — | `site/about.html` with verified job-weighted statistics |
+| Light/dark mode | — | Toggle in sidebar, persisted to localStorage |
+| Scatter view controls | — | Exposure score range slider (min–max 1–10) |
 
 The US version scrapes the BLS website with Playwright because BLS blocks bots; the Canadian version downloads open CSV/XLSX files directly — no browser automation required after the initial setup.
 
@@ -153,8 +161,11 @@ OPENAI_API_KEY=your_key_here
 # 1. Build the occupation list from COPS data
 uv run python build_occupations.py
 
-# 1b. Fetch Job Bank concordance IDs for direct profile URLs (optional, ~30s)
+# 1b. Fetch Job Bank concordance IDs for direct profile URLs (~30s)
 uv run python build_jobbank_urls.py
+
+# 1c. Scrape Job Bank for canonical titles + employment requirements (~3 min)
+uv run python scrape_jobbank.py
 
 # 2. Generate Markdown pages (used as LLM input)
 uv run python generate_pages.py
@@ -172,7 +183,7 @@ uv run python build_site_data_ca.py
 cd site && python -m http.server 8000
 ```
 
-Steps 1–3 and 5 are deterministic and fast (seconds). Step 1b queries the Job Bank Solr API for each NOC code to get direct profile URLs (462/516 get a direct link; 54 fall back to a search page). Step 4 is the only step that calls a paid external API (~$0.50 for all 516 occupations with GPT-4o-mini). Results are cached incrementally, so the script can be safely interrupted and resumed.
+Steps 1–3 and 5 are deterministic. Step 1b queries the Job Bank Solr API for concordance IDs (462/516 get direct profile links; 54 fall back to a search URL). Step 1c scrapes each profile's summary and requirements pages (~924 HTTP requests at 0.1 s each, ~3 min total); it saves progress every 50 occupations and is safe to interrupt and resume. Step 4 is the only paid API call (~$0.50 for all 516 occupations with GPT-4o-mini) and is also incrementally resumable.
 
 ---
 

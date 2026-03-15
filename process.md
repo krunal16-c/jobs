@@ -6,14 +6,16 @@ This document explains every step of the data pipeline in detail: where data com
 
 ## Overview
 
-The pipeline has five stages:
+The pipeline has seven stages:
 
 ```
 [1] COPS CSV + Outlook XLSX
         ↓
-[2] occupations.json   ← build_occupations.py
+[2] occupations.json   ← build_occupations.py   (516 occupations + fallback URLs)
         ↓
-[2b] occupations.json  ← build_jobbank_urls.py  (adds direct Job Bank profile URLs)
+[2b] occupations.json  ← build_jobbank_urls.py  (upgrades to direct profile URLs)
+        ↓
+[2c] occupations.json  ← scrape_jobbank.py      (adds canonical titles + requirements)
         ↓
 [3] pages/*.md         ← generate_pages.py
         ↓
@@ -143,6 +145,28 @@ This ID is stored in Job Bank's Solr search index at `/core/ta-jobtitle_en/selec
 When multiple results are returned, the record with the **shortest title** is chosen as the most canonical entry for that occupation.
 
 **Results:** 462 of 516 occupations get direct profile URLs. The remaining 54 (where Solr returns no match) fall back to the Job Bank search page pre-filled with the occupation title.
+
+---
+
+## Stage 2c — Scraping Job Bank titles and requirements (`scrape_jobbank.py`)
+
+**Input:** `occupations.json`
+**Output:** `occupations.json` (two new fields per occupation)
+
+This script fetches two pages per occupation for the 462 with a direct profile URL:
+
+1. **Summary page** (`/marketreport/summary-occupation/{cid}/ca`) — extracts the canonical Job Bank title from the `<span class="heading-info">` element inside the page `<h1>`, then strips the trailing " in Canada" suffix. For example, the NOC title "Retail salespersons, visual merchandisers and related workers" becomes **"Shop Clerk"** — the most common job posting title on Job Bank.
+
+2. **Requirements page** (`/marketreport/requirements/{cid}/ca`) — extracts up to 3 bullet points from the `<ul>` under the `<h2>Employment requirements</h2>` heading. These are direct quotes from the NOC description, e.g. *"A bachelor's degree in computer science… is usually required."*
+
+**Fields added to `occupations.json`:**
+
+| Field | Content |
+|-------|---------|
+| `title_jobbank` | Canonical Job Bank title (e.g. `"Cook"`, `"Systems Auditor"`) |
+| `education_req` | List of up to 3 requirement bullet strings |
+
+**Rate limiting:** 0.1 s between each request (2 requests per occupation = ~0.2 s/occupation × 462 = ~92 s total). Progress is saved every 50 occupations, making the script safe to interrupt and resume. The 54 occupations with search-fallback URLs are skipped (they have no requirements page).
 
 ---
 
@@ -295,14 +319,15 @@ Results are saved incrementally after each occupation — if the script is inter
 
 ## Stage 6 — Building the site dataset (`build_site_data_ca.py`)
 
-**Input:** `occupations.csv`, `scores.json`
+**Input:** `occupations.csv`, `scores.json`, `occupations.json`
 **Output:** `site/data.json`
 
-A straightforward merge. For each row in `occupations.csv`, look up the matching slug in `scores.json` and emit a compact JSON object:
+Merges three sources per occupation — CSV stats, LLM scores, and Job Bank scraped data — into a compact JSON object:
 
 ```json
 {
   "title": "Software engineers and designers",
+  "title_jobbank": "Devops Engineer",
   "slug": "software-engineers-and-designers",
   "noc_code": "21221",
   "category": "Natural and applied sciences",
@@ -311,13 +336,17 @@ A straightforward merge. For each row in `occupations.csv`, look up the matching
   "outlook": 6,
   "outlook_desc": "Moderate risk of Shortage",
   "education": "University degree",
+  "education_req": [
+    "A bachelor's degree, usually in computer science, computer systems engineering, software engineering or mathematics is required.",
+    "A college diploma in computer science is usually required."
+  ],
   "exposure": 9,
   "exposure_rationale": "Software engineering is almost entirely digital work...",
   "url": "https://www.jobbank.gc.ca/marketreport/summary-occupation/6225/ca"
 }
 ```
 
-`pay` is in CAD annually. `jobs` is 2023 employment. `outlook` is the numeric proxy value (−8 to +12). `exposure` is null until `score.py` has been run.
+`pay` is in CAD annually. `jobs` is 2023 employment. `outlook` is the numeric proxy value (−8 to +12). `title_jobbank` and `education_req` are `null` for the 54 occupations without a direct Job Bank profile page.
 
 ---
 
@@ -342,13 +371,17 @@ Ten predefined filter chips allow users to narrow the treemap to a subset of occ
 | High AI | Exposure score ≥ 7 |
 | Low AI | Exposure score ≤ 2 |
 
+### Light and dark mode
+
+A toggle button (☀️ / 🌙) in the sidebar header switches between dark (default) and light themes. The preference is persisted to `localStorage`. The CSS is driven entirely by custom properties (`--bg`, `--fg`, `--border`, etc.) on `:root` and `body.light`, so all HTML elements update instantly. Canvas drawing (treemap fill, scatter fill, gradient legends) uses JS helper functions (`canvasBg()`, `cellAlpha()`, `labelPrimary()`, etc.) that read the current `isLight` state.
+
 ### Treemap view
 
 Uses a **squarified treemap** algorithm. Occupations are first grouped by category; categories are laid out as large rectangles; within each category, individual occupations are squarified.
 
 - **Area** = `jobs` (employment 2023). Occupations without employment data are given a minimum area of 1.
 - **Color** = AI exposure, mapped through a green→amber→red gradient (0 = `rgb(50,160,50)`, 5 = `rgb(230,150,30)`, 10 = `rgb(255,40,20)`).
-- **Label** = occupation title + `score/10 · N jobs` if the rectangle is large enough.
+- **Label** = `title_jobbank` (if available) or `title`, then `score/10 · N jobs`, then `$XXK/yr` — each line only drawn if the rectangle is tall/wide enough.
 
 ### Exposure vs Outlook view (scatter/column)
 
@@ -357,6 +390,21 @@ Groups occupations into vertical columns by AI exposure score (0–10). Within e
 - **Column width** = proportional to total employment at that exposure score.
 - **Cell height** = proportional to the occupation's employment within its column.
 - **Color** = labour market outlook, mapped green (shortage) → red (surplus).
+- **Cell labels** show `shortOutlook()` text ("Balanced", "Strong demand", "Moderate surplus") — not the internal `+2%` proxy value.
+- **Outlook colour legend** appears in the sidebar when this view is active.
+
+#### Exposure score range slider
+
+Two `<input type="range">` sliders (Min and Max, both 1–10) let the user narrow the columns to a specific exposure range. Changing either slider immediately re-runs `layoutColumns()` and `drawColumns()`. The `layoutColumns()` function skips any occupation with `exposure < scatterMin || exposure > scatterMax`. The slider snaps Min ≤ Max: if the user drags Min above Max, Min is clamped down to Max (and vice versa).
+
+### Tooltip
+
+Hovering any cell opens a tooltip with:
+- **Title**: `title_jobbank` if available, otherwise the NOC `title`; the NOC title shown below as "Also: …" when they differ
+- **AI Exposure**: score + animated fill bar
+- **Stats grid**: median pay, employment 2023, outlook, education/requirements, category, NOC code
+- **Education / Requirements**: first `education_req` bullet (scraped from Job Bank) if available; falls back to the TEER-derived label
+- **Rationale**: LLM-generated 2–3 sentence explanation
 
 ### Sidebar statistics
 
@@ -367,8 +415,8 @@ Computed client-side from the loaded data:
 - **Histogram** = jobs grouped by integer exposure score 0–10.
 - **Breakdown** = jobs grouped into 5 exposure tiers (Minimal 0–1, Low 2–3, Moderate 4–5, High 6–7, Very High 8–10).
 - **Exposure by pay** = job-weighted average exposure within each CAD pay band.
-- **Exposure by education** = job-weighted average exposure within each TEER level.
-- **Wages exposed** = `Σ(jobs × pay)` for occupations with exposure ≥ 7, expressed in billions of CAD (e.g. ~$86B).
+- **Exposure by education** = job-weighted average exposure within each TEER level (human-readable labels).
+- **Wages exposed** = `Σ(jobs × pay)` for occupations with exposure ≥ 7, displayed in billions of CAD (~$86B).
 
 ### Methodology page (`site/about.html`)
 

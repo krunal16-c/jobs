@@ -595,17 +595,25 @@ tr:hover td { background: var(--bg3); }
 
   <!-- PIPELINE -->
   <h2>Pipeline</h2>
-  <p>Five scripts, run in order, build everything from raw government files to the website:</p>
+  <p>Seven scripts, run in order, build everything from raw government files to the website:</p>
 
   <table>
     <tr><th>Script</th><th>Output</th><th>Description</th></tr>
     <tr><td><code>build_occupations.py</code></td><td><code>occupations.json</code></td><td>Reads COPS CSV, extracts 516 NOC unit groups, assigns categories and Job Bank search URLs</td></tr>
-    <tr><td><code>build_jobbank_urls.py</code></td><td>Updates <code>occupations.json</code></td><td>Queries Job Bank Solr API to look up concordance IDs for direct profile URLs</td></tr>
+    <tr><td><code>build_jobbank_urls.py</code></td><td>Updates <code>occupations.json</code></td><td>Queries Job Bank Solr API to look up concordance IDs for direct profile URLs (462/516)</td></tr>
+    <tr><td><code>scrape_jobbank.py</code></td><td>Updates <code>occupations.json</code></td><td>Scrapes Job Bank summary and requirements pages to add canonical titles and employment requirement bullets (~3 min, resumable)</td></tr>
     <tr><td><code>generate_pages.py</code></td><td><code>pages/*.md</code></td><td>Generates one Markdown file per occupation (used as LLM input)</td></tr>
     <tr><td><code>make_csv_ca.py</code></td><td><code>occupations.csv</code></td><td>Compiles wages, employment, education, and outlook into a flat CSV</td></tr>
     <tr><td><code>score.py</code></td><td><code>scores.json</code></td><td>Calls GPT-4o-mini via OpenAI API to score each occupation 0–10</td></tr>
-    <tr><td><code>build_site_data_ca.py</code></td><td><code>site/data.json</code></td><td>Merges CSV + scores into the single JSON the frontend loads</td></tr>
+    <tr><td><code>build_site_data_ca.py</code></td><td><code>site/data.json</code></td><td>Merges CSV + scores + scraped Job Bank data into the single JSON the frontend loads</td></tr>
   </table>
+
+  <h3>What gets scraped from Job Bank</h3>
+  <p>For the 462 occupations with a direct Job Bank profile, <code>scrape_jobbank.py</code> collects:</p>
+  <ul>
+    <li><strong>Canonical title</strong> — the most common job-posting title on Job Bank (e.g. <em>"Shop Clerk"</em> instead of the NOC label <em>"Retail salespersons, visual merchandisers and related workers"</em>). This is what appears in treemap boxes and tooltips.</li>
+    <li><strong>Employment requirements</strong> — up to 3 bullet points from the <em>Employment requirements</em> section, sourced from the NOC description (e.g. <em>"A bachelor's degree in computer science… is usually required."</em>). Shown in the hover tooltip alongside the TEER-based education tier.</li>
+  </ul>
 
   <!-- LIMITATIONS -->
   <h2>Known limitations</h2>
