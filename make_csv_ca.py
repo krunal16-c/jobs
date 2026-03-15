@@ -230,8 +230,8 @@ def main():
             outlook_pct = ""
         outlook_desc = OUTLOOK_DESC.get(outlook_key, "")
 
-        # Education from TEER
-        teer = code[0]
+        # Education from TEER (NOC 2021: first digit for 0-5xxxx; second digit for 6-9xxxx)
+        teer = code[1] if code[0] in "6789" else code[0]
         education = TEER_EDUCATION.get(teer, "")
 
         rows.append({

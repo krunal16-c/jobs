@@ -13,6 +13,8 @@ The pipeline has five stages:
         ↓
 [2] occupations.json   ← build_occupations.py
         ↓
+[2b] occupations.json  ← build_jobbank_urls.py  (adds direct Job Bank profile URLs)
+        ↓
 [3] pages/*.md         ← generate_pages.py
         ↓
 [4] occupations.csv    ← make_csv_ca.py
@@ -21,7 +23,7 @@ The pipeline has five stages:
         ↓
 [6] site/data.json     ← build_site_data_ca.py
         ↓
-[7] site/index.html    (visualization)
+[7] site/index.html + site/about.html    (visualization + methodology)
 ```
 
 ---
@@ -114,10 +116,33 @@ Each occupation gets a URL-safe slug from its title (lowercase, non-alphanumeric
 
 ### Job Bank URL
 
-Each occupation's profile URL is constructed as:
+Initially each occupation gets a fallback search URL pointing to Job Bank's occupation search:
 ```
-https://www.jobbank.gc.ca/marketreport/occupation/{NOC_CODE}/ca
+https://www.jobbank.gc.ca/trend-analysis/search-occupations?searchKeyword={title}
 ```
+
+These are then replaced by `build_jobbank_urls.py` with direct profile URLs (see Stage 2b).
+
+---
+
+## Stage 2b — Fetching Job Bank profile URLs (`build_jobbank_urls.py`)
+
+**Input:** `occupations.json`
+**Output:** `occupations.json` (URLs updated in-place)
+
+Job Bank occupation profile pages use an internal **concordance ID** in the URL — not the NOC code:
+```
+https://www.jobbank.gc.ca/marketreport/summary-occupation/{concordance_id}/ca
+```
+
+This ID is stored in Job Bank's Solr search index at `/core/ta-jobtitle_en/select`. For each NOC 2021 code, the script queries:
+- `fq=noc21_code:{code}` — filter to this NOC code
+- `fq=jtt_ind:1` — only canonical job title entries
+- `fl=noc_job_title_concordance_id,title` — return ID and title
+
+When multiple results are returned, the record with the **shortest title** is chosen as the most canonical entry for that occupation.
+
+**Results:** 462 of 516 occupations get direct profile URLs. The remaining 54 (where Solr returns no match) fall back to the Job Bank search page pre-filled with the occupation title.
 
 ---
 
@@ -215,7 +240,17 @@ The NOC 2021 TEER (Training, Education, Experience, and Responsibilities) system
 | 4 | Secondary school diploma | 52 |
 | 5 | Short-term work demonstration / on-the-job training | 37 |
 
-For the 252 occupations with codes starting `6`–`9` (Sales, Trades, Resources, Manufacturing), the TEER is not directly encoded in the first digit. These occupations receive education labels based on their NOC major group assignment and the typical TEER distribution within that group.
+**TEER detection for codes 6–9:** In NOC 2021, the first digit of a code encodes the TEER level *only* for codes starting with `0`–`5`. For codes starting with `6`–`9` (Sales, Trades, Natural Resources, Manufacturing), the first digit is a **sector indicator**, not TEER. The TEER for these occupations is encoded in the **second digit** of the code. For example, `63200` (Cooks) has first digit `6` (Sales/Service sector) and second digit `3` (TEER 3 = college diploma <2 years).
+
+**Frontend display:** The visualization displays education using human-readable labels rather than the raw TEER system labels:
+
+| TEER | Displayed as |
+|------|-------------|
+| 5 | No degree |
+| 4 | High school |
+| 3 | Vocational |
+| 2 | College / 2yr |
+| 0, 1 | University+ |
 
 ---
 
@@ -244,10 +279,11 @@ The LLM returns a JSON object:
 
 ### API and model
 
-- **Provider:** OpenRouter (`https://openrouter.ai/api/v1/chat/completions`)
-- **Default model:** `google/gemini-3-flash-preview` (fast, cheap, good calibration)
+- **Provider:** OpenAI (`https://api.openai.com/v1/chat/completions`)
+- **Default model:** `gpt-4o-mini` (fast, cheap, strong instruction-following)
 - **Temperature:** 0.2 (low, for consistency)
 - **Rate limiting:** 0.5 second delay between requests by default
+- **API key:** Set `OPENAI_API_KEY` in `.env`
 
 Results are saved incrementally after each occupation — if the script is interrupted, it can be resumed without re-scoring already-cached occupations.
 
@@ -277,7 +313,7 @@ A straightforward merge. For each row in `occupations.csv`, look up the matching
   "education": "University degree",
   "exposure": 9,
   "exposure_rationale": "Software engineering is almost entirely digital work...",
-  "url": "https://www.jobbank.gc.ca/marketreport/occupation/21221/ca"
+  "url": "https://www.jobbank.gc.ca/marketreport/summary-occupation/6225/ca"
 }
 ```
 
@@ -285,9 +321,26 @@ A straightforward merge. For each row in `occupations.csv`, look up the matching
 
 ---
 
-## Stage 7 — The visualization (`site/index.html`)
+## Stage 7 — The visualization (`site/index.html` + `site/about.html`)
 
 The frontend is a self-contained single HTML file, adapted from karpathy/jobs. It loads `data.json` and renders two views using an HTML `<canvas>` element.
+
+### Filter chips
+
+Ten predefined filter chips allow users to narrow the treemap to a subset of occupations matching standard Canadian job market categories:
+
+| Filter | Criteria |
+|--------|----------|
+| All | No filter (default) |
+| In Demand | `outlook_desc` contains "Shortage" |
+| Surplus | `outlook_desc` contains "Surplus" |
+| $90K+ | Annual pay ≥ $90,000 |
+| Trades | Category = "Trades, transport and equipment operators" |
+| Health | Category = "Health occupations" |
+| Business | Category = "Business, finance and administration" |
+| STEM | Category = "Natural and applied sciences" |
+| High AI | Exposure score ≥ 7 |
+| Low AI | Exposure score ≤ 2 |
 
 ### Treemap view
 
@@ -315,7 +368,17 @@ Computed client-side from the loaded data:
 - **Breakdown** = jobs grouped into 5 exposure tiers (Minimal 0–1, Low 2–3, Moderate 4–5, High 6–7, Very High 8–10).
 - **Exposure by pay** = job-weighted average exposure within each CAD pay band.
 - **Exposure by education** = job-weighted average exposure within each TEER level.
-- **Wages exposed** = `Σ(jobs × pay)` for occupations with exposure ≥ 7, expressed in trillions of CAD.
+- **Wages exposed** = `Σ(jobs × pay)` for occupations with exposure ≥ 7, expressed in billions of CAD (e.g. ~$86B).
+
+### Methodology page (`site/about.html`)
+
+A companion page explains all data sources, calculations, and limitations with verified job-weighted statistics. Key verified figures (from `site/data.json`):
+
+- **20.1 million** jobs covered across 485 occupations with employment data
+- **3.7** weighted average AI exposure score
+- **50.2%** of jobs have low AI exposure (score ≤ 2)
+- **4.8%** of jobs have high AI exposure (score ≥ 7)
+- **$86 billion** in annual wages in high-exposure occupations
 
 ---
 
