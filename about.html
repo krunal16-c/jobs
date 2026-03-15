@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Methodology — AI Exposure of the Canadian Job Market</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a26;
+  --fg: #e0e0e8;
+  --fg2: #888894;
+  --accent: #4a9eff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.6;
+  padding: 0 0 80px;
+}
+
+nav {
+  position: sticky;
+  top: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 10;
+}
+nav a {
+  color: var(--fg2);
+  text-decoration: none;
+  font-size: 13px;
+}
+nav a:hover { color: var(--fg); }
+nav a.home {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--fg);
+}
+nav .sep { color: rgba(255,255,255,0.2); }
+
+.container {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 32px 0;
+}
+
+h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.lead {
+  font-size: 16px;
+  color: var(--fg2);
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 640px;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 44px 0 14px;
+  padding-top: 44px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+h2:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+
+h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 24px 0 8px;
+  color: var(--fg);
+}
+
+p {
+  color: var(--fg2);
+  margin-bottom: 14px;
+  max-width: 680px;
+}
+
+ul, ol {
+  color: var(--fg2);
+  padding-left: 20px;
+  margin-bottom: 14px;
+  max-width: 680px;
+}
+li { margin-bottom: 5px; }
+
+code {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  background: rgba(255,255,255,0.07);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--fg);
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.stat-card .num {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-card .desc {
+  font-size: 12px;
+  color: var(--fg2);
+  line-height: 1.4;
+}
+.num-green  { color: #5cd65c; }
+.num-yellow { color: #e0b44a; }
+.num-red    { color: #e05c5c; }
+.num-blue   { color: var(--accent); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 16px 0 24px;
+}
+th {
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg2);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--fg2);
+  vertical-align: top;
+}
+td:first-child { color: var(--fg); font-weight: 500; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+.callout {
+  background: var(--bg3);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 16px 0;
+  font-size: 13px;
+  color: var(--fg2);
+  max-width: 680px;
+}
+.callout strong { color: var(--fg); }
+
+.exposure-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  font-size: 13px;
+}
+.exposure-bar .label {
+  width: 80px;
+  flex-shrink: 0;
+  color: var(--fg2);
+  font-size: 12px;
+}
+.exposure-bar .track {
+  flex: 1;
+  height: 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.exposure-bar .fill { height: 100%; border-radius: 3px; }
+.exposure-bar .val {
+  width: 30px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--fg);
+}
+
+.tier-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="home">← AI Exposure: Canada</a>
+  <span class="sep">|</span>
+  <a href="index.html">Treemap</a>
+  <span class="sep">|</span>
+  <span style="color:var(--fg)">Methodology</span>
+</nav>
+
+<div class="container">
+
+  <h1>Methodology &amp; Statistics</h1>
+  <p class="lead">
+    How we built the dataset, how AI exposure scores are calculated,
+    and what the numbers mean for Canada's 20 million workers.
+  </p>
+
+  <!-- KEY NUMBERS -->
+  <h2>Key numbers</h2>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="num num-blue">516</div>
+      <div class="desc">NOC 2021 unit-group occupations covered</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-blue">20.1M</div>
+      <div class="desc">Canadian jobs represented (2023 data)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-yellow">3.7</div>
+      <div class="desc">Job-weighted average AI exposure (0–10)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-green">50.2%</div>
+      <div class="desc">Jobs in Low-exposure occupations (score 2–3)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-red">4.8%</div>
+      <div class="desc">Jobs in Very High-exposure occupations (score 7+)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-red">$86B</div>
+      <div class="desc">Annual payroll in high-exposure occupations (7+)</div>
+    </div>
+  </div>
+
+  <!-- DATA SOURCES -->
+  <h2>Data sources</h2>
+  <p>All underlying data is open-access, published by the Government of Canada under the Open Government Licence.</p>
+
+  <table>
+    <tr>
+      <th>Source</th><th>Publisher</th><th>What we use</th>
+    </tr>
+    <tr>
+      <td><a href="https://open.canada.ca/data/en/dataset/e80851b8-de68-43bd-a85c-c72e1b3a3890">COPS 2024–2033 Summary CSV</a></td>
+      <td>ESDC</td>
+      <td>Employment 2023, projected job openings 2024–2033, labour market outlook per occupation</td>
+    </tr>
+    <tr>
+      <td><a href="https://open.canada.ca/data/en/dataset/b0e112e9-cf53-4e79-8838-23cd98debe5b">3-Year Employment Outlooks 2025–2027</a></td>
+      <td>ESDC / Job Bank</td>
+      <td>Regional outlook ratings (Shortage / Balance / Surplus) per occupation × province</td>
+    </tr>
+    <tr>
+      <td><a href="https://www150.statcan.gc.ca/n1/tbl/csv/14100417-eng.zip">Table 14-10-0417 (LFS wages)</a></td>
+      <td>Statistics Canada</td>
+      <td>Median hourly wages by broad NOC group, 2013 (latest unit-group level available)</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.statcan.gc.ca/en/subjects/standard/noc/2021/indexV1">NOC 2021</a></td>
+      <td>Statistics Canada</td>
+      <td>Occupation titles, 5-digit NOC codes, TEER levels, category structure</td>
+    </tr>
+    <tr>
+      <td><a href="https://www.jobbank.gc.ca">Job Bank</a></td>
+      <td>ESDC</td>
+      <td>Occupation profile URLs (via internal concordance ID lookup)</td>
+    </tr>
+  </table>
+
+  <!-- OCCUPATIONS -->
+  <h2>Occupations</h2>
+  <p>
+    The 516 occupations come from the COPS 2024–2033 summary CSV, which lists every NOC 2021
+    unit group with labour market projections. We exclude the "All Occupations" aggregate and
+    all TEER / major-group subtotals, keeping only individual 5-digit unit groups.
+  </p>
+  <p>
+    485 of 516 occupations have employment figures. The remaining 31 are suppressed by Statistics
+    Canada due to small sample sizes. Those 485 represent <strong>20.1 million jobs</strong> — the
+    full Canadian employed labour force.
+  </p>
+
+  <h3>By major occupational category</h3>
+  <table>
+    <tr><th>Category</th><th>Occupations</th><th>Jobs (2023)</th><th>Avg AI Exposure</th></tr>
+    <tr><td>Sales and service</td><td>61</td><td>4.95M</td><td>2.9</td></tr>
+    <tr><td>Trades, transport and equipment operators</td><td>94</td><td>3.37M</td><td>2.2</td></tr>
+    <tr><td>Business, finance and administration</td><td>51</td><td>3.26M</td><td>5.5</td></tr>
+    <tr><td>Education, law and social services</td><td>52</td><td>2.48M</td><td>3.8</td></tr>
+    <tr><td>Natural and applied sciences</td><td>66</td><td>1.93M</td><td>6.0</td></tr>
+    <tr><td>Health occupations</td><td>43</td><td>1.62M</td><td>3.2</td></tr>
+    <tr><td>Manufacturing and utilities</td><td>68</td><td>956K</td><td>2.5</td></tr>
+    <tr><td>Art, culture, recreation and sport</td><td>37</td><td>647K</td><td>4.1</td></tr>
+    <tr><td>Management occupations</td><td>15</td><td>428K</td><td>5.4</td></tr>
+    <tr><td>Natural resources and agriculture</td><td>24</td><td>425K</td><td>2.0</td></tr>
+    <tr><td>Other occupations</td><td>5</td><td>71K</td><td>1.4</td></tr>
+  </table>
+
+  <!-- WAGES -->
+  <h2>Wage estimates</h2>
+  <p>
+    Statistics Canada's Labour Force Survey (LFS) median wage tables at the unit-group level
+    are only publicly available up to 2013. We use <strong>Table 14-10-0417</strong> (median hourly
+    wages, Canada, all genders, age 15+) and scale forward to 2024 dollars:
+  </p>
+  <div class="callout">
+    <strong>Formula:</strong> <code>hourly_2024 = hourly_2013 × 1.35</code> (≈ 2.8% per year compounding)<br>
+    <code>annual_2024 = round(hourly_2024 × 2000)</code> (standard 40 hr/week, 50 weeks)
+  </div>
+  <p>
+    The 1.35 inflation factor is derived from Statistics Canada's Consumer Price Index: the CPI rose
+    from 122.8 (2013) to 165.7 (2024 est.), a ratio of 1.349. Wages are assigned at the
+    <em>broad occupational group</em> level — all unit groups within the same 2-digit NOC prefix share
+    the same base wage. This is an approximation; individual occupations vary considerably within groups.
+  </p>
+  <p>
+    For NOC 2021 codes starting with 6–9, the TEER level is the <em>second</em> digit of the code.
+    For codes 0–5, the TEER is the first digit. This corrects a common misreading of the code structure.
+  </p>
+
+  <!-- OUTLOOK -->
+  <h2>Labour market outlook</h2>
+  <p>
+    The <strong>3-Year Employment Outlooks 2025–2027</strong> XLSX contains ~44,000 rows
+    — one per occupation × province/territory. There is no pre-computed national row.
+    We derive a national outlook by taking the <strong>modal (most common) rating</strong>
+    across all 13 regions for each occupation.
+  </p>
+  <p>
+    Outlook ratings are converted to a numeric proxy for the scatter view axis:
+  </p>
+  <table>
+    <tr><th>Rating</th><th>Numeric proxy</th><th>Occupations</th></tr>
+    <tr><td>Strong risk of Shortage</td><td>+12</td><td>38</td></tr>
+    <tr><td>Moderate risk of Shortage</td><td>+6</td><td>65</td></tr>
+    <tr><td>Balance</td><td>+2</td><td>365</td></tr>
+    <tr><td>Moderate risk of Surplus</td><td>−4</td><td>11</td></tr>
+    <tr><td>Strong risk of Surplus</td><td>−8</td><td>6</td></tr>
+    <tr><td>Undetermined</td><td>—</td><td>31</td></tr>
+  </table>
+
+  <!-- AI EXPOSURE SCORING -->
+  <h2>AI exposure scoring</h2>
+  <p>
+    Each occupation receives a score from <strong>0 to 10</strong> measuring how much AI is
+    expected to reshape that occupation — both through direct automation and through productivity
+    amplification (fewer workers needed per unit of output).
+  </p>
+  <p>
+    Scores are generated by <strong>GPT-4o-mini</strong> (OpenAI) reading a structured
+    Markdown description of the occupation, including: NOC code, TEER level, major category,
+    employment 2023, projected job openings 2024–2033, and labour market conditions.
+    The model is instructed to respond with a single JSON object: <code>{"exposure": N, "rationale": "..."}</code>.
+    Temperature is set to 0.2 for consistency.
+  </p>
+
+  <h3>Score anchors</h3>
+  <table>
+    <tr><th>Score</th><th>Tier</th><th>Canadian examples</th></tr>
+    <tr><td>0–1</td><td><span class="tier-dot" style="background:#325032"></span>Minimal</td><td>Underground miners, roofers, landscapers, athletes, fishers</td></tr>
+    <tr><td>2–3</td><td><span class="tier-dot" style="background:#8ca032"></span>Low</td><td>Electricians, plumbers, truck drivers, personal support workers, nurses' aides</td></tr>
+    <tr><td>4–5</td><td><span class="tier-dot" style="background:#c87832"></span>Moderate</td><td>Registered nurses, police officers, general practitioners, retail managers</td></tr>
+    <tr><td>6–7</td><td><span class="tier-dot" style="background:#e03232"></span>High</td><td>Accountants, engineers, teachers, HR managers, journalists</td></tr>
+    <tr><td>8–9</td><td><span class="tier-dot" style="background:#e01010"></span>Very high</td><td>Software developers, data scientists, graphic designers, translators, paralegals</td></tr>
+    <tr><td>10</td><td><span class="tier-dot" style="background:#f00000"></span>Maximum</td><td>Data entry clerks, telemarketers, medical transcriptionists</td></tr>
+  </table>
+
+  <!-- DISTRIBUTION -->
+  <h2>Score distribution</h2>
+
+  <div style="margin:20px 0;">
+    <div class="exposure-bar">
+      <span class="label">Score 1</span>
+      <div class="track"><div class="fill" style="width:1.1%;background:#325032"></div></div>
+      <span class="val">1.1%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 2</span>
+      <div class="track"><div class="fill" style="width:31.6%;background:#5c7832"></div></div>
+      <span class="val">31.6%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 3</span>
+      <div class="track"><div class="fill" style="width:17.5%;background:#8ca032"></div></div>
+      <span class="val">17.5%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 4</span>
+      <div class="track"><div class="fill" style="width:22.7%;background:#c07832"></div></div>
+      <span class="val">22.7%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 5</span>
+      <div class="track"><div class="fill" style="width:9.2%;background:#c86432"></div></div>
+      <span class="val">9.2%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 6</span>
+      <div class="track"><div class="fill" style="width:13.1%;background:#e03c32"></div></div>
+      <span class="val">13.1%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 7</span>
+      <div class="track"><div class="fill" style="width:2.0%;background:#e02818"></div></div>
+      <span class="val">2.0%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 8</span>
+      <div class="track"><div class="fill" style="width:1.8%;background:#e01010"></div></div>
+      <span class="val">1.8%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 9</span>
+      <div class="track"><div class="fill" style="width:0.8%;background:#ee0808"></div></div>
+      <span class="val">0.8%</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label">Score 10</span>
+      <div class="track"><div class="fill" style="width:0.2%;background:#ff0000"></div></div>
+      <span class="val">0.2%</span>
+    </div>
+  </div>
+
+  <p>
+    Percentages are <strong>job-weighted</strong> (by 2023 employment). The unweighted distribution
+    skews slightly higher because many large-employment trade occupations sit at scores 2–3.
+    The job-weighted average across all 20.1M jobs is <strong>3.7 / 10</strong>.
+  </p>
+
+  <!-- BY SECTOR -->
+  <h2>AI exposure by sector</h2>
+  <p>Highest-exposure sectors are knowledge-work-heavy; lowest are physical/trades:</p>
+
+  <div style="margin:16px 0;">
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Natural &amp; applied sci.</span>
+      <div class="track"><div class="fill" style="width:60%;background:#e03232"></div></div>
+      <span class="val">6.0</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Business &amp; finance</span>
+      <div class="track"><div class="fill" style="width:55%;background:#cc3832"></div></div>
+      <span class="val">5.5</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Management</span>
+      <div class="track"><div class="fill" style="width:54%;background:#c83c32"></div></div>
+      <span class="val">5.4</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Art &amp; culture</span>
+      <div class="track"><div class="fill" style="width:41%;background:#b86432"></div></div>
+      <span class="val">4.1</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Education &amp; law</span>
+      <div class="track"><div class="fill" style="width:38%;background:#a07032"></div></div>
+      <span class="val">3.8</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Health</span>
+      <div class="track"><div class="fill" style="width:32%;background:#808832"></div></div>
+      <span class="val">3.2</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Sales &amp; service</span>
+      <div class="track"><div class="fill" style="width:29%;background:#6c8c32"></div></div>
+      <span class="val">2.9</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Manufacturing</span>
+      <div class="track"><div class="fill" style="width:25%;background:#609032"></div></div>
+      <span class="val">2.5</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Trades &amp; transport</span>
+      <div class="track"><div class="fill" style="width:22%;background:#489832"></div></div>
+      <span class="val">2.2</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:180px;">Natural resources</span>
+      <div class="track"><div class="fill" style="width:20%;background:#329632"></div></div>
+      <span class="val">2.0</span>
+    </div>
+  </div>
+
+  <!-- BY EDUCATION -->
+  <h2>AI exposure by education level</h2>
+  <p>Higher education correlates with higher AI exposure because knowledge work is more amenable to AI assistance:</p>
+
+  <div style="margin:16px 0;">
+    <div class="exposure-bar">
+      <span class="label" style="width:160px;">University+</span>
+      <div class="track"><div class="fill" style="width:55%;background:#cc3832"></div></div>
+      <span class="val">5.5</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:160px;">College / 2yr</span>
+      <div class="track"><div class="fill" style="width:60%;background:#e03232"></div></div>
+      <span class="val">6.0</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:160px;">Vocational</span>
+      <div class="track"><div class="fill" style="width:32%;background:#809032"></div></div>
+      <span class="val">3.2</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:160px;">High school</span>
+      <div class="track"><div class="fill" style="width:38%;background:#a07032"></div></div>
+      <span class="val">3.8</span>
+    </div>
+    <div class="exposure-bar">
+      <span class="label" style="width:160px;">No degree req.</span>
+      <div class="track"><div class="fill" style="width:41%;background:#b06832"></div></div>
+      <span class="val">4.1</span>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Note on College / Apprenticeship (TEER 2):</strong> This group scores higher than University because it
+    includes many technical and skilled-trade roles in areas like IT, engineering technology, and
+    health sciences — all knowledge-intensive fields that AI actively targets.
+  </div>
+
+  <!-- HIGH EXPOSURE -->
+  <h2>High-exposure occupations</h2>
+  <p>Occupations scoring 7 or higher represent <strong>956,600 jobs</strong> (4.8% of the labour force) and a combined annual payroll of <strong>$86 billion CAD</strong>.</p>
+
+  <table>
+    <tr><th>Occupation</th><th>Score</th><th>Jobs (2023)</th><th>Median Pay</th></tr>
+    <tr><td>Data entry clerks</td><td>10/10</td><td>36,000</td><td>$47K</td></tr>
+    <tr><td>Software developers and programmers</td><td>9/10</td><td>155,700</td><td>$116K</td></tr>
+    <tr><td>Data scientists</td><td>8/10</td><td>36,600</td><td>$116K</td></tr>
+    <tr><td>Computer systems developers and programmers</td><td>8/10</td><td>45,700</td><td>$116K</td></tr>
+    <tr><td>Software engineers and designers</td><td>8/10</td><td>113,100</td><td>$116K</td></tr>
+  </table>
+
+  <h2>Lowest-exposure occupations</h2>
+  <table>
+    <tr><th>Occupation</th><th>Score</th><th>Jobs (2023)</th></tr>
+    <tr><td>Roofers and shinglers</td><td>1/10</td><td>23,000</td></tr>
+    <tr><td>Underground production and development miners</td><td>1/10</td><td>29,400</td></tr>
+    <tr><td>Dancers</td><td>1/10</td><td>13,600</td></tr>
+    <tr><td>Athletes</td><td>1/10</td><td>2,700</td></tr>
+    <tr><td>Fishers</td><td>1/10</td><td>10,600</td></tr>
+  </table>
+
+  <!-- PIPELINE -->
+  <h2>Pipeline</h2>
+  <p>Five scripts, run in order, build everything from raw government files to the website:</p>
+
+  <table>
+    <tr><th>Script</th><th>Output</th><th>Description</th></tr>
+    <tr><td><code>build_occupations.py</code></td><td><code>occupations.json</code></td><td>Reads COPS CSV, extracts 516 NOC unit groups, assigns categories and Job Bank search URLs</td></tr>
+    <tr><td><code>build_jobbank_urls.py</code></td><td>Updates <code>occupations.json</code></td><td>Queries Job Bank Solr API to look up concordance IDs for direct profile URLs</td></tr>
+    <tr><td><code>generate_pages.py</code></td><td><code>pages/*.md</code></td><td>Generates one Markdown file per occupation (used as LLM input)</td></tr>
+    <tr><td><code>make_csv_ca.py</code></td><td><code>occupations.csv</code></td><td>Compiles wages, employment, education, and outlook into a flat CSV</td></tr>
+    <tr><td><code>score.py</code></td><td><code>scores.json</code></td><td>Calls GPT-4o-mini via OpenAI API to score each occupation 0–10</td></tr>
+    <tr><td><code>build_site_data_ca.py</code></td><td><code>site/data.json</code></td><td>Merges CSV + scores into the single JSON the frontend loads</td></tr>
+  </table>
+
+  <!-- LIMITATIONS -->
+  <h2>Known limitations</h2>
+  <ul>
+    <li><strong>Wages are approximated.</strong> Wages come from 2013 LFS data scaled by a single inflation factor. Real wages vary significantly within each group, and some occupations have seen wage growth well above or below the average.</li>
+    <li><strong>No unit-group wage data after 2013.</strong> Statistics Canada does not release LFS median wages at the 5-digit NOC unit-group level after 2013. More granular or recent wage data is behind a custom data request.</li>
+    <li><strong>National outlook is a modal proxy.</strong> The 3-year outlook XLSX contains only provincial/territorial rows. We use the most common rating across all regions, which may not reflect national conditions accurately for occupations with strong regional variation (e.g., oil-patch trades).</li>
+    <li><strong>AI exposure is an LLM opinion.</strong> Scores come from a language model reading a text description — they are not empirically measured automation probabilities. The model calibration anchors reduce variance, but individual scores should be interpreted as rough tiers, not precise values.</li>
+    <li><strong>31 occupations lack employment data.</strong> Statistics Canada suppresses figures for occupations with very small sample sizes. These occupations are shown in the treemap at a minimal size.</li>
+    <li><strong>Job Bank URLs: 54 occupations use search fallback.</strong> The Job Bank's internal concordance database does not include NOC 2021 codes for 54 unit groups (primarily very new or restructured categories). Clicking those occupations opens a pre-filled Job Bank search instead of a direct profile page.</li>
+    <li><strong>Employment year is 2023.</strong> The COPS dataset uses 2023 as the base employment year, not 2024 or 2025.</li>
+  </ul>
+
+  <!-- CREDITS -->
+  <h2>Credits</h2>
+  <ul>
+    <li><strong>Original concept &amp; code:</strong> <a href="https://github.com/karpathy/jobs">Andrej Karpathy — karpathy/jobs</a> (US version using BLS data)</li>
+    <li><strong>Canadian adaptation:</strong> Data pipeline, NOC 2021 mapping, and this site</li>
+    <li><strong>Occupation data:</strong> <a href="https://www.canada.ca/en/employment-social-development.html">Employment and Social Development Canada (ESDC)</a></li>
+    <li><strong>Statistical data:</strong> <a href="https://www.statcan.gc.ca">Statistics Canada</a></li>
+    <li><strong>Job profiles:</strong> <a href="https://www.jobbank.gc.ca">Job Bank Canada</a></li>
+    <li><strong>AI scoring:</strong> GPT-4o-mini via <a href="https://openai.com">OpenAI API</a></li>
+  </ul>
+
+</div>
+</body>
+</html>
