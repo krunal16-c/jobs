@@ -2,11 +2,18 @@
 Build a CSV summary of all Canadian occupations from COPS data and employment outlooks.
 
 Reads:
-  - data/cops_summary.csv  (COPS 2024-2033, employment + labour market conditions)
-  - data/outlook_ca.xlsx   (3-year employment outlooks by region)
-  - data/wages_by_noc.csv  (wage data from Stats Canada LFS, if available)
+  - data/cops_summary.csv              (COPS 2024-2033, employment + labour market conditions)
+  - data/outlook_ca.xlsx               (3-year employment outlooks by region)
+  - data/census_wages/98100586.csv     (2021 Census median employment income by NOC 2021 unit group)
 
 Writes: occupations.csv
+
+Wage source: Statistics Canada Table 98-10-0586-01, 2021 Census of Population.
+  Median annual employment income (2020 income reference year) by NOC 2021 unit group,
+  Canada total, all workers aged 15+.
+  511 of 516 occupations matched directly; 5 senior-manager codes (00011-00015) use the
+  consolidated parent code "00018" value, which Statistics Canada published in place of
+  individual unit-group figures for confidentiality reasons.
 
 Usage:
     uv run python make_csv_ca.py
@@ -20,70 +27,64 @@ import openpyxl
 from collections import Counter
 
 
-# 2013 Stats Canada median hourly wages by broad NOC group (scaled by 1.35 for 2024 CAD)
-# Source: Stats Canada Table 14-10-0417, "Median hourly wage rate", Canada, Total Gender, 15+
-INFLATION_FACTOR = 1.35  # ~3% per year 2013→2024
+def load_census_wages(path):
+    """
+    Load median annual employment income by NOC 2021 unit group from the 2021 Census table.
+    Returns dict: {noc_code: median_annual_income_2020}.
+    """
+    wages = {}
+    if not os.path.exists(path):
+        print(f"  WARNING: Census wages file not found at {path}")
+        return wages
 
-WAGE_BY_GROUP_2013 = {
-    "00": 57.69,   # Legislative/Senior management
-    "10": 43.27,   # Specialized middle management
-    "11": 31.41,   # Professional finance and business
-    "12": 25.00,   # Administrative supervisors
-    "13": 21.67,   # Administrative occupations
-    "14": 19.00,   # Administrative support
-    "20": 43.27,   # Engineering/IT managers
-    "21": 36.36,   # Professional natural sciences
-    "22": 26.00,   # Technical natural sciences
-    "30": 36.54,   # Professional health
-    "31": 36.54,   # Professional health (treating/consulting)
-    "32": 25.00,   # Technical health
-    "33": 19.00,   # Assisting health
-    "40": 35.00,   # Professional education/law/social
-    "41": 35.00,   # Professional law/education
-    "42": 38.41,   # Front-line public protection
-    "43": 19.00,   # Paraprofessional law/social
-    "44": 23.08,   # Assisting education/legal
-    "45": 13.57,   # Care providers
-    "50": 20.00,   # Art/culture/recreation
-    "51": 26.44,   # Professional art/culture
-    "52": 22.50,   # Technical art/culture
-    "53": 16.00,   # Art/culture/sport
-    "54": 14.50,   # Support art/culture
-    "55": 14.50,   # Support art/culture
-    "60": 18.00,   # Sales/service supervisors
-    "62": 13.00,   # Sales/service
-    "63": 14.00,   # Service occupations
-    "64": 14.50,   # Sales representatives
-    "65": 11.25,   # Sales/service support
-    "70": 27.00,   # Technical trades/transport
-    "72": 20.00,   # General trades
-    "73": 22.38,   # Mail/transport operators
-    "74": 16.95,   # Transport helpers
-    "75": 22.75,   # Trades/transport (generic)
-    "80": 32.00,   # Natural resources supervisors
-    "82": 15.00,   # Natural resources workers
-    "84": 15.00,   # Agriculture workers
-    "85": 15.00,   # Natural resources labourers
-    "86": 15.00,   # Natural resources labourers
-    "90": 28.85,   # Processing supervisors
-    "92": 17.99,   # Machine operators/assemblers
-    "93": 17.99,   # Manufacturing operators
-    "94": 17.99,   # Assembly workers
-    "95": 14.75,   # Manufacturing labourers
-}
+    occ_col  = "Occupation - Unit group - National Occupational Classification (NOC) 2021 (819)"
+    med_col  = "Employment income statistics (3):Median employment income ($)[2]"
+
+    with open(path, encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row.get("GEO") != "Canada":
+                continue
+            if not row.get("Visible minority (15)", "").startswith("Total"):
+                continue
+            if not row.get("Highest certificate, diploma or degree (7)", "").startswith("Total"):
+                continue
+            if not row.get("Work activity during the reference year (4)", "").startswith("Total"):
+                continue
+            if not row.get("Gender and age (7)", "").startswith("Total"):
+                continue
+            occ = row.get(occ_col, "")
+            m = re.match(r"^(\d{5})\s", occ)
+            if m:
+                code = m.group(1)
+                val  = row.get(med_col, "").strip()
+                if val:
+                    try:
+                        wages[code] = int(float(val))
+                    except ValueError:
+                        pass
+
+    # The 5 senior-manager unit groups (00011-00015) are suppressed individually;
+    # Statistics Canada published them as "00018 Seniors managers - public and private sector".
+    fallback = wages.get("00018")
+    if fallback:
+        for code in ("00011", "00012", "00013", "00014", "00015"):
+            if code not in wages:
+                wages[code] = fallback
+
+    return wages
 
 
-def get_wage_estimate(code):
-    """Estimate median annual wage in CAD from 2013 LFS data scaled to 2024."""
-    prefix = code[:2]
-    hourly_2013 = WAGE_BY_GROUP_2013.get(prefix)
-    if hourly_2013:
-        hourly_2024 = hourly_2013 * INFLATION_FACTOR
-        annual_2024 = round(hourly_2024 * 2000)  # 2000 hours/year
-        return annual_2024
-    # Fallback: TEER-based estimate
-    teer = int(code[0])
-    teer_wages = {0: 130000, 1: 95000, 2: 70000, 3: 58000, 4: 48000, 5: 40000}
+def get_wage_estimate(code, census_wages):
+    """
+    Return median annual employment income (2020 CAD) from the 2021 Census.
+    Falls back to a TEER-based estimate for any unmatched code.
+    """
+    if code in census_wages:
+        return census_wages[code]
+    # TEER-based fallback (rarely reached)
+    teer = int(code[1] if code[0] in "6789" else code[0])
+    teer_wages = {0: 130000, 1: 95000, 2: 72000, 3: 58000, 4: 46000, 5: 38000}
     return teer_wages.get(teer, 55000)
 
 
@@ -169,6 +170,11 @@ def main():
     with open("occupations.json") as f:
         occupations = json.load(f)
 
+    print("Loading 2021 Census wage data...")
+    census_wages = load_census_wages("data/census_wages/98100586.csv")
+    matched = sum(1 for o in occupations if o["noc_code"] in census_wages)
+    print(f"  Census wages loaded: {len(census_wages)} unit groups, {matched}/{len(occupations)} occupations matched")
+
     print("Loading COPS data...")
     cops_data = {}
     with open("data/cops_summary.csv", encoding="latin-1") as f:
@@ -214,8 +220,8 @@ def main():
             except ValueError:
                 pass
 
-        # Wages (estimated from major group)
-        annual_pay = get_wage_estimate(code)
+        # Wages — 2021 Census median annual employment income (2020 reference year)
+        annual_pay = get_wage_estimate(code, census_wages)
         hourly_pay = round(annual_pay / 2000, 2)
 
         # Outlook
