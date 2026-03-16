@@ -510,6 +510,18 @@ canvas#canvas {
     </div>
   </div>
 
+  <div class="stat-section" id="provinceSection">
+    <h3>Exposure by province</h3>
+    <select id="provincePicker" style="width:100%;padding:5px 4px;border-radius:5px;border:1px solid var(--border);background:var(--bg2);color:var(--fg);font-size:12px;cursor:pointer;margin-bottom:8px;">
+      <option value="">— Canada (national) —</option>
+    </select>
+    <div id="provinceStats" style="display:none;">
+      <div class="stat-big" id="provAvgExposure" style="font-size:28px;">—</div>
+      <div class="stat-label">weighted avg AI exposure</div>
+      <div style="margin-top:8px;" id="provBreakdown"></div>
+    </div>
+  </div>
+
   <div class="gradient-legend">
     <span>Low AI exposure</span>
     <canvas id="gradientLegend" width="80" height="8"></canvas>
@@ -608,6 +620,7 @@ const FILTERS = [
 let activeFilter = "all";
 let allData = [];
 let data = [];
+let nationalCatEmp = {};  // category → total national employment
 
 function buildFilterChips() {
   const el = document.getElementById("filterChips");
@@ -1316,18 +1329,101 @@ function drawOutlookLegend() {
 
 // ── Load ────────────────────────────────────────────────────────────────
 
-fetch("data.json")
-  .then(r => r.json())
-  .then(d => {
+let provinceData = [];
+
+Promise.all([fetch("data.json").then(r => r.json()), fetch("province_data.json").then(r => r.json())])
+  .then(([d, p]) => {
     allData = d;
     data = d;
+    provinceData = p;
     buildFilterChips();
+    buildProvincePicker();
     computeStats();
     drawGradientLegend();
     drawOutlookLegend();
     applyTheme();
     resize();
   });
+
+function buildProvincePicker() {
+  // Pre-compute national category employment for scaling
+  allData.forEach(d => {
+    if (d.jobs && d.category) {
+      nationalCatEmp[d.category] = (nationalCatEmp[d.category] || 0) + d.jobs;
+    }
+  });
+
+  const sel = document.getElementById("provincePicker");
+  provinceData.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.abbr;
+    opt.textContent = `${p.abbr} — ${p.name} (${p.avg_exposure.toFixed(2)})`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener("change", onProvinceChange);
+}
+
+function onProvinceChange() {
+  const abbr = document.getElementById("provincePicker").value;
+  const statsEl = document.getElementById("provinceStats");
+
+  if (!abbr) {
+    // Reset to national data
+    data = allData;
+    statsEl.style.display = "none";
+    computeStats();
+    resize();
+    return;
+  }
+
+  const p = provinceData.find(x => x.abbr === abbr);
+  if (!p) return;
+
+  // Build provincial category employment lookup (in persons, not thousands)
+  const provCatEmp = {};
+  p.breakdown.forEach(b => { provCatEmp[b.category] = b.employment; });
+
+  // Scale each occupation's jobs by provincial share vs national share
+  const provTotal = p.total_employment;
+  const natTotal = allData.reduce((s, d) => s + (d.jobs || 0), 0);
+
+  data = allData.map(d => {
+    if (!d.jobs || !d.category) return d;
+    const natCat = nationalCatEmp[d.category] || 1;
+    const provCat = provCatEmp[d.category] || 0;
+    // Scale: occupation keeps its within-category share, category scaled to provincial size
+    const scaledJobs = Math.round(d.jobs * (provCat / natCat));
+    return { ...d, jobs: scaledJobs };
+  });
+
+  statsEl.style.display = "block";
+  document.getElementById("provAvgExposure").innerHTML =
+    `<span style="color:${exposureColorCSS(p.avg_exposure, 1)}">${p.avg_exposure.toFixed(2)}</span>`;
+
+  // Category breakdown bars
+  const maxEmp = Math.max(...p.breakdown.map(b => b.employment));
+  const catLabels = {
+    "Business, finance and administration": "Business & finance",
+    "Natural and applied sciences": "STEM",
+    "Education, law and social services": "Education & law",
+    "Art, culture, recreation and sport": "Arts & culture",
+    "Trades, transport and equipment operators": "Trades & transport",
+    "Natural resources and agriculture": "Natural resources",
+    "Manufacturing and utilities": "Manufacturing",
+    "Health occupations": "Health",
+    "Sales and service": "Sales & service",
+    "Management occupations": "Management",
+  };
+  document.getElementById("provBreakdown").innerHTML = p.breakdown.map(b => `
+    <div class="hbar-row">
+      <span class="hbar-label" style="font-size:9px;">${catLabels[b.category] || b.category}</span>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${b.employment/maxEmp*100}%;background:${exposureColorCSS(b.avg_exposure, 0.8)}"></div></div>
+      <span class="hbar-val">${b.avg_exposure.toFixed(1)}</span>
+    </div>`).join("");
+
+  computeStats();
+  resize();
+}
 
 window.addEventListener("resize", resize);
 </script>

@@ -1,0 +1,682 @@
+[
+  {
+    "name": "Ontario",
+    "abbr": "ON",
+    "avg_exposure": 3.84,
+    "total_employment": 8227017,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 1938558,
+        "avg_exposure": 2.88,
+        "pct": 23.6
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 1368175,
+        "avg_exposure": 5.69,
+        "pct": 16.6
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 1183542,
+        "avg_exposure": 2.26,
+        "pct": 14.4
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 1024195,
+        "avg_exposure": 3.85,
+        "pct": 12.4
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 938537,
+        "avg_exposure": 6.01,
+        "pct": 11.4
+      },
+      {
+        "category": "Health occupations",
+        "employment": 707895,
+        "avg_exposure": 3.52,
+        "pct": 8.6
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 451167,
+        "avg_exposure": 2.4,
+        "pct": 5.5
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 350762,
+        "avg_exposure": 4.14,
+        "pct": 4.3
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 170133,
+        "avg_exposure": 2.31,
+        "pct": 2.1
+      },
+      {
+        "category": "Management occupations",
+        "employment": 94053,
+        "avg_exposure": 5.46,
+        "pct": 1.1
+      }
+    ]
+  },
+  {
+    "name": "Quebec",
+    "abbr": "QC",
+    "avg_exposure": 3.77,
+    "total_employment": 4644783,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 1091950,
+        "avg_exposure": 2.88,
+        "pct": 23.5
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 753550,
+        "avg_exposure": 5.69,
+        "pct": 16.2
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 734183,
+        "avg_exposure": 2.26,
+        "pct": 15.8
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 626130,
+        "avg_exposure": 3.85,
+        "pct": 13.5
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 448238,
+        "avg_exposure": 6.01,
+        "pct": 9.7
+      },
+      {
+        "category": "Health occupations",
+        "employment": 418080,
+        "avg_exposure": 3.52,
+        "pct": 9.0
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 236725,
+        "avg_exposure": 2.4,
+        "pct": 5.1
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 194088,
+        "avg_exposure": 4.14,
+        "pct": 4.2
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 94925,
+        "avg_exposure": 2.31,
+        "pct": 2.0
+      },
+      {
+        "category": "Management occupations",
+        "employment": 46913,
+        "avg_exposure": 5.46,
+        "pct": 1.0
+      }
+    ]
+  },
+  {
+    "name": "British Columbia",
+    "abbr": "BC",
+    "avg_exposure": 3.75,
+    "total_employment": 2946258,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 745558,
+        "avg_exposure": 2.88,
+        "pct": 25.3
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 479611,
+        "avg_exposure": 2.26,
+        "pct": 16.3
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 472567,
+        "avg_exposure": 5.69,
+        "pct": 16.0
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 364360,
+        "avg_exposure": 3.85,
+        "pct": 12.4
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 277002,
+        "avg_exposure": 6.01,
+        "pct": 9.4
+      },
+      {
+        "category": "Health occupations",
+        "employment": 270752,
+        "avg_exposure": 3.52,
+        "pct": 9.2
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 133968,
+        "avg_exposure": 4.14,
+        "pct": 4.5
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 105903,
+        "avg_exposure": 2.4,
+        "pct": 3.6
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 68994,
+        "avg_exposure": 2.31,
+        "pct": 2.3
+      },
+      {
+        "category": "Management occupations",
+        "employment": 27543,
+        "avg_exposure": 5.46,
+        "pct": 0.9
+      }
+    ]
+  },
+  {
+    "name": "Alberta",
+    "abbr": "AB",
+    "avg_exposure": 3.68,
+    "total_employment": 2590289,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 627508,
+        "avg_exposure": 2.88,
+        "pct": 24.2
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 475506,
+        "avg_exposure": 2.26,
+        "pct": 18.4
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 392533,
+        "avg_exposure": 5.69,
+        "pct": 15.2
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 301238,
+        "avg_exposure": 3.85,
+        "pct": 11.6
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 256255,
+        "avg_exposure": 6.01,
+        "pct": 9.9
+      },
+      {
+        "category": "Health occupations",
+        "employment": 213330,
+        "avg_exposure": 3.52,
+        "pct": 8.2
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 116264,
+        "avg_exposure": 2.4,
+        "pct": 4.5
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 107206,
+        "avg_exposure": 2.31,
+        "pct": 4.1
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 80955,
+        "avg_exposure": 4.14,
+        "pct": 3.1
+      },
+      {
+        "category": "Management occupations",
+        "employment": 19494,
+        "avg_exposure": 5.46,
+        "pct": 0.8
+      }
+    ]
+  },
+  {
+    "name": "Nova Scotia",
+    "abbr": "NS",
+    "avg_exposure": 3.67,
+    "total_employment": 523458,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 130900,
+        "avg_exposure": 2.88,
+        "pct": 25.0
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 84147,
+        "avg_exposure": 2.26,
+        "pct": 16.1
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 75550,
+        "avg_exposure": 5.69,
+        "pct": 14.4
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 67628,
+        "avg_exposure": 3.85,
+        "pct": 12.9
+      },
+      {
+        "category": "Health occupations",
+        "employment": 59912,
+        "avg_exposure": 3.52,
+        "pct": 11.4
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 44187,
+        "avg_exposure": 6.01,
+        "pct": 8.4
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 21697,
+        "avg_exposure": 2.4,
+        "pct": 4.1
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 17522,
+        "avg_exposure": 2.31,
+        "pct": 3.3
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 16703,
+        "avg_exposure": 4.14,
+        "pct": 3.2
+      },
+      {
+        "category": "Management occupations",
+        "employment": 5212,
+        "avg_exposure": 5.46,
+        "pct": 1.0
+      }
+    ]
+  },
+  {
+    "name": "New Brunswick",
+    "abbr": "NB",
+    "avg_exposure": 3.66,
+    "total_employment": 405344,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 99058,
+        "avg_exposure": 2.88,
+        "pct": 24.4
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 68403,
+        "avg_exposure": 2.26,
+        "pct": 16.9
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 64017,
+        "avg_exposure": 5.69,
+        "pct": 15.8
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 56585,
+        "avg_exposure": 3.85,
+        "pct": 14.0
+      },
+      {
+        "category": "Health occupations",
+        "employment": 42510,
+        "avg_exposure": 3.52,
+        "pct": 10.5
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 29760,
+        "avg_exposure": 6.01,
+        "pct": 7.3
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 19661,
+        "avg_exposure": 2.4,
+        "pct": 4.9
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 12244,
+        "avg_exposure": 2.31,
+        "pct": 3.0
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 9727,
+        "avg_exposure": 4.14,
+        "pct": 2.4
+      },
+      {
+        "category": "Management occupations",
+        "employment": 3379,
+        "avg_exposure": 5.46,
+        "pct": 0.8
+      }
+    ]
+  },
+  {
+    "name": "Manitoba",
+    "abbr": "MB",
+    "avg_exposure": 3.62,
+    "total_employment": 736303,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 170358,
+        "avg_exposure": 2.88,
+        "pct": 23.1
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 132819,
+        "avg_exposure": 2.26,
+        "pct": 18.0
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 113325,
+        "avg_exposure": 5.69,
+        "pct": 15.4
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 102107,
+        "avg_exposure": 3.85,
+        "pct": 13.9
+      },
+      {
+        "category": "Health occupations",
+        "employment": 74748,
+        "avg_exposure": 3.52,
+        "pct": 10.2
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 51332,
+        "avg_exposure": 6.01,
+        "pct": 7.0
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 46311,
+        "avg_exposure": 2.4,
+        "pct": 6.3
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 20403,
+        "avg_exposure": 2.31,
+        "pct": 2.8
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 19473,
+        "avg_exposure": 4.14,
+        "pct": 2.6
+      },
+      {
+        "category": "Management occupations",
+        "employment": 5427,
+        "avg_exposure": 5.46,
+        "pct": 0.7
+      }
+    ]
+  },
+  {
+    "name": "Newfoundland and Labrador",
+    "abbr": "NL",
+    "avg_exposure": 3.62,
+    "total_employment": 244975,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 60458,
+        "avg_exposure": 2.88,
+        "pct": 24.7
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 42381,
+        "avg_exposure": 2.26,
+        "pct": 17.3
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 36752,
+        "avg_exposure": 3.85,
+        "pct": 15.0
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 31958,
+        "avg_exposure": 5.69,
+        "pct": 13.0
+      },
+      {
+        "category": "Health occupations",
+        "employment": 27810,
+        "avg_exposure": 3.52,
+        "pct": 11.4
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 19843,
+        "avg_exposure": 6.01,
+        "pct": 8.1
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 10206,
+        "avg_exposure": 2.31,
+        "pct": 4.2
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 7556,
+        "avg_exposure": 2.4,
+        "pct": 3.1
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 5935,
+        "avg_exposure": 4.14,
+        "pct": 2.4
+      },
+      {
+        "category": "Management occupations",
+        "employment": 2077,
+        "avg_exposure": 5.46,
+        "pct": 0.8
+      }
+    ]
+  },
+  {
+    "name": "Prince Edward Island",
+    "abbr": "PE",
+    "avg_exposure": 3.59,
+    "total_employment": 93658,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 22383,
+        "avg_exposure": 2.88,
+        "pct": 23.9
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 15608,
+        "avg_exposure": 2.26,
+        "pct": 16.7
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 13858,
+        "avg_exposure": 5.69,
+        "pct": 14.8
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 11620,
+        "avg_exposure": 3.85,
+        "pct": 12.4
+      },
+      {
+        "category": "Health occupations",
+        "employment": 9570,
+        "avg_exposure": 3.52,
+        "pct": 10.2
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 6712,
+        "avg_exposure": 6.01,
+        "pct": 7.2
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 5517,
+        "avg_exposure": 2.31,
+        "pct": 5.9
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 5325,
+        "avg_exposure": 2.4,
+        "pct": 5.7
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 2262,
+        "avg_exposure": 4.14,
+        "pct": 2.4
+      },
+      {
+        "category": "Management occupations",
+        "employment": 803,
+        "avg_exposure": 5.46,
+        "pct": 0.9
+      }
+    ]
+  },
+  {
+    "name": "Saskatchewan",
+    "abbr": "SK",
+    "avg_exposure": 3.55,
+    "total_employment": 617463,
+    "breakdown": [
+      {
+        "category": "Sales and service",
+        "employment": 152542,
+        "avg_exposure": 2.88,
+        "pct": 24.7
+      },
+      {
+        "category": "Trades, transport and equipment operators",
+        "employment": 115592,
+        "avg_exposure": 2.26,
+        "pct": 18.7
+      },
+      {
+        "category": "Education, law and social services",
+        "employment": 84973,
+        "avg_exposure": 3.85,
+        "pct": 13.8
+      },
+      {
+        "category": "Business, finance and administration",
+        "employment": 82025,
+        "avg_exposure": 5.69,
+        "pct": 13.3
+      },
+      {
+        "category": "Health occupations",
+        "employment": 62715,
+        "avg_exposure": 3.52,
+        "pct": 10.2
+      },
+      {
+        "category": "Natural and applied sciences",
+        "employment": 41090,
+        "avg_exposure": 6.01,
+        "pct": 6.7
+      },
+      {
+        "category": "Natural resources and agriculture",
+        "employment": 30458,
+        "avg_exposure": 2.31,
+        "pct": 4.9
+      },
+      {
+        "category": "Manufacturing and utilities",
+        "employment": 27208,
+        "avg_exposure": 2.4,
+        "pct": 4.4
+      },
+      {
+        "category": "Art, culture, recreation and sport",
+        "employment": 15757,
+        "avg_exposure": 4.14,
+        "pct": 2.6
+      },
+      {
+        "category": "Management occupations",
+        "employment": 5103,
+        "avg_exposure": 5.46,
+        "pct": 0.8
+      }
+    ]
+  }
+]

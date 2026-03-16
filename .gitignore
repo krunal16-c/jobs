@@ -7,9 +7,12 @@ package-lock.json
 yarn.lock
 
 *.csv
+*.zip
+
 # Logs
 logs/
 *.log
+
 
 # OS generated files
 .DS_Store
