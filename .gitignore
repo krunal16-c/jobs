@@ -8,7 +8,7 @@ yarn.lock
 
 *.csv
 *.zip
-
+*.pptx
 # Logs
 logs/
 *.log

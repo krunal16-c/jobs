@@ -629,7 +629,7 @@ function labelPrimary(hov) { return isLight ? (hov ? "rgba(0,0,0,0.95)" : "rgba(
 function labelSecondary() { return isLight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.55)"; }
 function labelTertiary() { return isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.4)"; }
 function hoverStroke() { return isLight ? "rgba(0,0,0,0.8)" : "#fff"; }
-function cellAlpha(hov) { return hov ? (isLight ? 0.92 : 0.85) : (isLight ? 0.72 : 0.55); }
+function cellAlpha(hov) { return hov ? 1.0 : (isLight ? 0.90 : 0.75); }
 
 function exposureColor(score) {
   if (score == null) return [128, 128, 128];
