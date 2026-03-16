@@ -495,9 +495,19 @@ canvas#canvas {
   </div>
 
   <div class="stat-section">
-    <h3>Payroll in high AI-exposure jobs (7+)</h3>
+    <h3>Payroll in high AI-exposure jobs (<span id="wageThresholdLabel">6</span>+)</h3>
     <div class="stat-big" id="statWages">—</div>
     <div class="stat-label" id="statWagesDesc">combined annual payroll estimate (2023–2024 LFS wages, CAD)</div>
+    <div class="range-block" style="margin-top:8px;">
+      <div class="range-row">
+        <div class="range-row-label"><span>Threshold</span><strong id="wageThresholdVal">6</strong></div>
+        <input type="range" class="score-slider" id="wageThreshold" min="1" max="10" value="6"
+          oninput="document.getElementById('wageThresholdLabel').textContent=this.value;document.getElementById('wageThresholdVal').textContent=this.value;computeStats()">
+      </div>
+      <div class="range-display">
+        Scores <span class="rdval" id="wageThresholdDisplay">6</span>–10
+      </div>
+    </div>
   </div>
 
   <div class="gradient-legend">
@@ -1160,10 +1170,13 @@ function computeStats() {
     tier.pct = totalJobs > 0 ? tier.jobs / totalJobs * 100 : 0;
   }
 
+  const wageThreshold = parseInt(document.getElementById("wageThreshold")?.value || 6);
+  document.getElementById("wageThresholdDisplay").textContent = wageThreshold;
+
   let wagesExposed = 0;
   let highExpJobs = 0;
   for (const d of data) {
-    if (d.exposure != null && d.exposure >= 7 && d.jobs && d.pay) {
+    if (d.exposure != null && d.exposure >= wageThreshold && d.jobs && d.pay) {
       wagesExposed += d.jobs * d.pay;
       highExpJobs += d.jobs;
     }
@@ -1240,6 +1253,8 @@ function computeStats() {
   // Wages at risk
   const billions = wagesExposed / 1e9;
   document.getElementById("statWages").textContent = "$" + billions.toFixed(0) + "B";
+  document.getElementById("statWagesDesc").textContent =
+    formatNumber(highExpJobs) + " workers · combined annual payroll estimate (2023–2024 LFS wages, CAD)";
 }
 
 // ── Events ──────────────────────────────────────────────────────────────
