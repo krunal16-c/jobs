@@ -99,7 +99,7 @@ top_robotics = sorted(
 )[:5]
 
 # ── Province metadata ──────────────────────────────────────────────────────────
-CANADA_AVG_EXPOSURE = 3.8   # job-weighted national average
+CANADA_AVG_EXPOSURE = 4.6   # job-weighted national average
 
 PROVINCE_META = {
     "ON": "Ontario",
@@ -116,6 +116,24 @@ PROVINCE_META = {
 
 # Build a lookup from province_data.json
 prov_lookup = {p["abbr"]: p for p in province_data}
+
+# National category employment totals (for provincial scaling)
+national_cat_emp = {}
+for _o in occupations:
+    _cat = _o.get("category")
+    _jobs = _o.get("jobs") or 0
+    if _cat and _jobs:
+        national_cat_emp[_cat] = national_cat_emp.get(_cat, 0) + _jobs
+
+def prov_job_count(occ, prov_cat_emp_dict):
+    """Scale national job count to provincial estimate."""
+    nat_jobs = occ.get("jobs") or 0
+    cat = occ.get("category")
+    if not nat_jobs or not cat:
+        return None
+    nat_cat = national_cat_emp.get(cat, 1)
+    prov_cat = prov_cat_emp_dict.get(cat, 0)
+    return round(nat_jobs * prov_cat / nat_cat)
 
 # ── Shared nav HTML ────────────────────────────────────────────────────────────
 def build_nav():
@@ -388,6 +406,34 @@ tr:hover td { background: var(--bg3); }
 .footer a { color: var(--fg2); }
 .footer a:hover { color: var(--fg); }
 
+/* ── Embedded treemap ─────────────────────────────────────────────────── */
+#prov-treemap {
+  width: 100%;
+  height: 520px;
+  position: relative;
+  background: var(--bg);
+  cursor: default;
+}
+#prov-canvas { position: absolute; top: 0; left: 0; }
+#prov-tooltip {
+  position: fixed; pointer-events: none;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px;
+  font-size: 13px; line-height: 1.5; max-width: 340px;
+  opacity: 0; transition: opacity 0.12s;
+  z-index: 20; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+#prov-tooltip.visible { opacity: 1; }
+#prov-tooltip .tt-title { font-weight: 600; font-size: 14px; margin-bottom: 6px; color: var(--fg); }
+#prov-tooltip .tt-jbtitle { font-size: 11px; color: var(--fg2); margin-bottom: 4px; }
+#prov-tooltip .tt-exposure { font-size: 12px; margin-bottom: 8px; }
+#prov-tooltip .tt-stats { display: grid; grid-template-columns: auto auto; gap: 2px 12px; font-size: 12px; }
+#prov-tooltip .tt-stats .label { color: var(--fg2); }
+#prov-tooltip .tt-stats .value { color: var(--fg); text-align: right; }
+#prov-tooltip .tt-rationale { font-size: 11px; color: var(--fg2); margin-top: 8px; line-height: 1.4; border-top: 1px solid var(--border); padding-top: 8px; }
+.treemap-caption { padding: 16px 32px 8px; font-size: 13px; color: var(--fg2); background: var(--bg); }
+.treemap-caption strong { color: var(--fg); font-size: 18px; font-weight: 700; display: block; margin-bottom: 4px; letter-spacing: -0.02em; }
+
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .province-hero { padding: 24px 16px 20px; }
@@ -406,6 +452,9 @@ def build_page(abbr):
     avg_exp = prov["avg_exposure"]
     total_emp = prov["total_employment"]
     breakdown = prov["breakdown"]
+
+    # Provincial category employment lookup
+    prov_cat_emp_dict = {b["category"]: b["employment"] for b in breakdown}
 
     # Top sector by employment
     top_sector = max(breakdown, key=lambda x: x["employment"])
@@ -445,10 +494,11 @@ def build_page(abbr):
     top_emp_rows = ""
     for o in top_emp_occs:
         color = exposure_color(o["exposure"])
+        p_jobs = prov_job_count(o, prov_cat_emp_dict)
         top_emp_rows += f"""      <tr>
         <td>{o['title']}</td>
         <td>{o['category']}</td>
-        <td>{fmt_jobs(o.get('jobs'))}</td>
+        <td>{fmt_jobs(p_jobs)}</td>
         <td><span class="score-badge" style="background:{color}">{o['exposure']}/10</span></td>
       </tr>
 """
@@ -457,9 +507,10 @@ def build_page(abbr):
     top_ai_rows = ""
     for o in top_ai:
         color = exposure_color(o["exposure"])
+        p_jobs = prov_job_count(o, prov_cat_emp_dict)
         top_ai_rows += f"""      <tr>
         <td>{o['title']}</td>
-        <td>{fmt_jobs(o.get('jobs'))}</td>
+        <td>{fmt_jobs(p_jobs)}</td>
         <td>{fmt_pay(o.get('pay'))}</td>
         <td><span class="score-badge" style="background:{color}">{o['exposure']}/10</span></td>
       </tr>
@@ -470,10 +521,11 @@ def build_page(abbr):
     for o in top_robotics:
         r_label, r_color = robotics_risk(o["category"])
         ai_color = exposure_color(o["exposure"])
+        p_jobs = prov_job_count(o, prov_cat_emp_dict)
         top_rob_rows += f"""      <tr>
         <td>{o['title']}</td>
         <td>{o['category']}</td>
-        <td>{fmt_jobs(o.get('jobs'))}</td>
+        <td>{fmt_jobs(p_jobs)}</td>
         <td style="color:{r_color};font-weight:600;">{r_label}</td>
         <td><span class="score-badge" style="background:{ai_color}">{o['exposure']}/10</span></td>
       </tr>
@@ -529,6 +581,21 @@ def build_page(abbr):
   </div>
 </div>
 
+<div class="treemap-caption">
+  <strong>AI Exposure Map — {name}</strong>
+  Box size = estimated provincial employment. Colour = AI exposure (green = low, red = high). Hover for details.
+</div>
+<div id="prov-treemap">
+  <canvas id="prov-canvas"></canvas>
+</div>
+<div id="prov-tooltip">
+  <div class="tt-title"></div>
+  <div class="tt-jbtitle"></div>
+  <div class="tt-exposure"></div>
+  <div class="tt-stats"></div>
+  <div class="tt-rationale"></div>
+</div>
+
 <div class="container">
 
   <h2>Employment by sector</h2>
@@ -547,7 +614,7 @@ def build_page(abbr):
       <tr>
         <th>Occupation</th>
         <th>Sector</th>
-        <th>Jobs (national)</th>
+        <th>Est. provincial jobs</th>
         <th>AI Exposure</th>
       </tr>
     </thead>
@@ -564,7 +631,7 @@ def build_page(abbr):
     <thead>
       <tr>
         <th>Occupation</th>
-        <th>Jobs (national)</th>
+        <th>Est. provincial jobs</th>
         <th>Median pay</th>
         <th>AI Exposure</th>
       </tr>
@@ -583,7 +650,7 @@ def build_page(abbr):
       <tr>
         <th>Occupation</th>
         <th>Sector</th>
-        <th>Jobs (national)</th>
+        <th>Est. provincial jobs</th>
         <th>Robotics risk</th>
         <th>AI Exposure</th>
       </tr>
@@ -611,11 +678,246 @@ def build_page(abbr):
 </div>
 
 <script>
-// Theme persistence
 (function() {{
   var stored = localStorage.getItem("theme");
   if (stored === "light") document.body.classList.add("light");
 }})();
+
+const PROV_ABBR = '{abbr}';
+let isLight = localStorage.getItem("theme") === "light";
+
+function canvasBg() {{ return isLight ? "#f2f2f7" : "#0a0a0f"; }}
+function labelPrimary(hov) {{ return isLight ? (hov ? "rgba(0,0,0,0.95)" : "rgba(0,0,0,0.85)") : (hov ? "#fff" : "rgba(255,255,255,0.9)"); }}
+function labelSecondary() {{ return isLight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.55)"; }}
+function labelTertiary() {{ return isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.4)"; }}
+function hoverStroke() {{ return isLight ? "rgba(0,0,0,0.8)" : "#fff"; }}
+function cellAlpha(hov) {{ return hov ? (isLight ? 0.92 : 0.85) : (isLight ? 0.72 : 0.55); }}
+
+function exposureColor(score) {{
+  if (score == null) return [128, 128, 128];
+  const t = Math.max(0, Math.min(10, score)) / 10;
+  let r, g, b;
+  if (t < 0.5) {{
+    const s = t / 0.5;
+    r = Math.round(50 + s * 180);
+    g = Math.round(160 - s * 10);
+    b = Math.round(50 - s * 20);
+  }} else {{
+    const s = (t - 0.5) / 0.5;
+    r = Math.round(230 + s * 25);
+    g = Math.round(150 - s * 110);
+    b = Math.round(30 - s * 10);
+  }}
+  return [r, g, b];
+}}
+function exposureColorCSS(score, alpha) {{
+  const [r, g, b] = exposureColor(score);
+  return `rgba(${{r}},${{g}},${{b}},${{alpha}})`;
+}}
+
+function worstAspect(row, rowSum, side, totalArea, availableExtent) {{
+  const rowExtent = availableExtent * (rowSum / totalArea);
+  if (rowExtent === 0) return Infinity;
+  let worst = 0;
+  for (const item of row) {{
+    const itemLen = side * (item.value / rowSum);
+    if (itemLen === 0) continue;
+    const aspect = Math.max(rowExtent / itemLen, itemLen / rowExtent);
+    if (aspect > worst) worst = aspect;
+  }}
+  return worst;
+}}
+
+function squarify(items, x, y, w, h) {{
+  if (items.length === 0) return [];
+  if (items.length === 1) return [{{ ...items[0], rx: x, ry: y, rw: w, rh: h }}];
+  const total = items.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return [];
+  const results = [];
+  let remaining = [...items];
+  let cx = x, cy = y, cw = w, ch = h;
+  while (remaining.length > 0) {{
+    const remTotal = remaining.reduce((s, d) => s + d.value, 0);
+    const vertical = cw >= ch;
+    const side = vertical ? ch : cw;
+    let row = [remaining[0]];
+    let rowSum = remaining[0].value;
+    for (let i = 1; i < remaining.length; i++) {{
+      const candidate = [...row, remaining[i]];
+      const candidateSum = rowSum + remaining[i].value;
+      if (worstAspect(candidate, candidateSum, side, remTotal, vertical ? cw : ch) <
+          worstAspect(row, rowSum, side, remTotal, vertical ? cw : ch)) {{
+        row = candidate; rowSum = candidateSum;
+      }} else {{ break; }}
+    }}
+    const rowFraction = rowSum / remTotal;
+    const rowThickness = vertical ? cw * rowFraction : ch * rowFraction;
+    let offset = 0;
+    for (const item of row) {{
+      const itemFraction = item.value / rowSum;
+      const itemLength = side * itemFraction;
+      if (vertical) results.push({{ ...item, rx: cx, ry: cy + offset, rw: rowThickness, rh: itemLength }});
+      else results.push({{ ...item, rx: cx + offset, ry: cy, rw: itemLength, rh: rowThickness }});
+      offset += itemLength;
+    }}
+    if (vertical) {{ cx += rowThickness; cw -= rowThickness; }}
+    else {{ cy += rowThickness; ch -= rowThickness; }}
+    remaining = remaining.slice(row.length);
+  }}
+  return results;
+}}
+
+const tmCanvas = document.getElementById("prov-canvas");
+const tmCtx = tmCanvas.getContext("2d");
+let tmDpr = window.devicePixelRatio || 1;
+let tmRects = [], tmHovered = null, tmData = [];
+const MARGIN = 12, GAP = 1.5;
+
+function tmLayout() {{
+  const container = document.getElementById("prov-treemap");
+  const w = container.clientWidth, h = container.clientHeight;
+  tmCanvas.width = w * tmDpr; tmCanvas.height = h * tmDpr;
+  tmCanvas.style.width = w + "px"; tmCanvas.style.height = h + "px";
+  const byCategory = {{}};
+  for (const d of tmData) {{
+    if (!byCategory[d.category]) byCategory[d.category] = [];
+    byCategory[d.category].push(d);
+  }}
+  const categories = Object.keys(byCategory).map(cat => ({{
+    cat, items: byCategory[cat].sort((a, b) => (b.jobs || 0) - (a.jobs || 0)),
+    value: byCategory[cat].reduce((s, d) => s + (d.jobs || 1), 0),
+  }})).sort((a, b) => b.value - a.value);
+  const catRects = squarify(categories, MARGIN, MARGIN, w - MARGIN*2, h - MARGIN*2);
+  tmRects = [];
+  for (const cr of catRects) {{
+    const items = cr.items.map(d => ({{ ...d, value: d.jobs || 1 }}));
+    const inner = squarify(items, cr.rx + GAP, cr.ry + GAP, cr.rw - GAP*2, cr.rh - GAP*2);
+    for (const ir of inner) tmRects.push(ir);
+  }}
+}}
+
+function tmDraw() {{
+  const w = tmCanvas.width, h = tmCanvas.height;
+  tmCtx.setTransform(tmDpr, 0, 0, tmDpr, 0, 0);
+  tmCtx.fillStyle = canvasBg();
+  tmCtx.fillRect(0, 0, w/tmDpr, h/tmDpr);
+  for (const r of tmRects) {{
+    const isHov = r === tmHovered;
+    const g = GAP / 2;
+    const rx = r.rx + g, ry = r.ry + g, rw = r.rw - g*2, rh = r.rh - g*2;
+    if (rw <= 0 || rh <= 0) continue;
+    tmCtx.fillStyle = exposureColorCSS(r.exposure, cellAlpha(isHov));
+    tmCtx.fillRect(rx, ry, rw, rh);
+    if (isHov) {{ tmCtx.strokeStyle = hoverStroke(); tmCtx.lineWidth = 2; tmCtx.strokeRect(rx, ry, rw, rh); }}
+    if (rw > 36 && rh > 14) {{
+      tmCtx.save();
+      tmCtx.beginPath(); tmCtx.rect(rx + 3, ry + 2, rw - 6, rh - 4); tmCtx.clip();
+      const fontSize = Math.min(13, Math.max(8, Math.min(rw / 9, rh / 2.5)));
+      tmCtx.font = `500 ${{fontSize}}px -apple-system, system-ui, sans-serif`;
+      tmCtx.fillStyle = labelPrimary(isHov);
+      tmCtx.textBaseline = "top";
+      let title = r.title_jobbank || r.title;
+      const maxW = rw - 8;
+      while (title.length > 4 && tmCtx.measureText(title).width > maxW) title = title.slice(0, -1);
+      if (title !== (r.title_jobbank || r.title)) title = title.slice(0, -1) + "…";
+      tmCtx.fillText(title, rx + 4, ry + 3);
+      if (rh > 26 && rw > 48) {{
+        const score = r.exposure != null ? r.exposure + "/10" : "–";
+        const jobs = r.jobs ? fmtN(r.jobs) + " jobs" : "";
+        const line2 = score + (jobs ? " · " + jobs : "");
+        const fs2 = Math.max(7, fontSize - 2);
+        tmCtx.font = `400 ${{fs2}}px -apple-system, system-ui, sans-serif`;
+        tmCtx.fillStyle = labelSecondary();
+        tmCtx.fillText(line2, rx + 4, ry + 3 + fontSize + 2);
+      }}
+      if (rh > 42 && rw > 60 && r.pay) {{
+        tmCtx.font = `400 ${{Math.max(7, fontSize - 2)}}px -apple-system, system-ui, sans-serif`;
+        tmCtx.fillStyle = labelTertiary();
+        tmCtx.fillText("$" + Math.round(r.pay / 1000) + "K/yr", rx + 4, ry + 3 + fontSize * 2 + 4);
+      }}
+      tmCtx.restore();
+    }}
+  }}
+}}
+
+function fmtN(n) {{
+  if (n == null) return "—";
+  if (n >= 1e6) return (n/1e6).toFixed(1) + "M";
+  if (n >= 1000) return Math.round(n/1000) + "K";
+  return n.toLocaleString();
+}}
+
+const ROBO_RISK = {{ "Manufacturing and utilities": "Very High", "Trades, transport and equipment operators": "High", "Natural resources and agriculture": "High", "Sales and service": "Moderate" }};
+const ROBO_CLR = {{ "Very High": "#e05c5c", "High": "#e0884a", "Moderate": "#e0b44a", "Low": "#5cd65c" }};
+const tmTooltip = document.getElementById("prov-tooltip");
+
+function tmShowTooltip(d, canvasMx, canvasMy) {{
+  const cRect = tmCanvas.getBoundingClientRect();
+  const absX = cRect.left + canvasMx, absY = cRect.top + canvasMy;
+  tmTooltip.querySelector(".tt-title").textContent = d.title_jobbank || d.title;
+  const jb = tmTooltip.querySelector(".tt-jbtitle");
+  if (d.title_jobbank && d.title_jobbank !== d.title) {{ jb.textContent = "Also: " + d.title; jb.style.display = ""; }}
+  else {{ jb.style.display = "none"; }}
+  const sc = d.exposure;
+  if (sc != null) {{
+    const col = exposureColorCSS(sc, 1);
+    const barBg = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
+    tmTooltip.querySelector(".tt-exposure").innerHTML =
+      `<span style="color:${{col}};font-weight:600;">AI Exposure: ${{sc}}/10</span>` +
+      `<div style="margin-top:3px;height:4px;background:${{barBg}};border-radius:2px;"><div style="height:100%;width:${{sc*10}}%;background:${{col}};border-radius:2px;"></div></div>`;
+  }} else {{ tmTooltip.querySelector(".tt-exposure").innerHTML = ""; }}
+  const rr = ROBO_RISK[d.category] || "Low";
+  tmTooltip.querySelector(".tt-stats").innerHTML = `
+    <span class="label">Median wage (2023–2024)</span><span class="value">$${{Math.round((d.pay||0)/1000)}}K/yr</span>
+    <span class="label">Est. provincial jobs</span><span class="value">${{fmtN(d.jobs)}}</span>
+    <span class="label">Outlook</span><span class="value">${{d.outlook_desc || "—"}}</span>
+    <span class="label">Category</span><span class="value" style="text-align:right;font-size:10px;">${{d.category}}</span>
+    <span class="label">Robotics risk</span><span class="value" style="color:${{ROBO_CLR[rr]||ROBO_CLR.Low}};font-weight:600;">${{rr}}</span>
+  `;
+  tmTooltip.querySelector(".tt-rationale").textContent = d.exposure_rationale || "";
+  const pad = 16;
+  let tx = absX + pad, ty = absY - pad;
+  if (tx + 340 > window.innerWidth) tx = absX - 340 - pad;
+  if (ty < 10) ty = absY + pad;
+  if (ty + 240 > window.innerHeight) ty = absY - 240;
+  tmTooltip.style.left = tx + "px"; tmTooltip.style.top = ty + "px";
+  tmTooltip.classList.add("visible");
+}}
+function tmHideTooltip() {{ tmTooltip.classList.remove("visible"); }}
+
+tmCanvas.addEventListener("mousemove", e => {{
+  const rect = tmCanvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  let hit = null;
+  for (let i = tmRects.length - 1; i >= 0; i--) {{
+    const r = tmRects[i];
+    if (mx >= r.rx && mx < r.rx + r.rw && my >= r.ry && my < r.ry + r.rh) {{ hit = r; break; }}
+  }}
+  if (hit !== tmHovered) {{ tmHovered = hit; tmDraw(); }}
+  if (hit) tmShowTooltip(hit, mx, my);
+  else tmHideTooltip();
+  tmCanvas.style.cursor = hit ? "pointer" : "default";
+}});
+tmCanvas.addEventListener("mouseleave", () => {{ tmHovered = null; tmDraw(); tmHideTooltip(); }});
+
+async function initMap() {{
+  const [dataRes, provRes] = await Promise.all([fetch('../data.json'), fetch('../province_data.json')]);
+  const allData = await dataRes.json();
+  const provinceData = await provRes.json();
+  const prov = provinceData.find(p => p.abbr === PROV_ABBR);
+  const natCatEmp = {{}};
+  allData.forEach(d => {{ if (d.jobs && d.category) natCatEmp[d.category] = (natCatEmp[d.category] || 0) + d.jobs; }});
+  const provCatEmp = {{}};
+  prov.breakdown.forEach(b => {{ provCatEmp[b.category] = b.employment; }});
+  tmData = allData.map(d => {{
+    if (!d.jobs || !d.category) return d;
+    const scaled = Math.round(d.jobs * (provCatEmp[d.category] || 0) / (natCatEmp[d.category] || 1));
+    return {{ ...d, jobs: scaled }};
+  }}).filter(d => (d.jobs || 0) > 0);
+  tmLayout(); tmDraw();
+}}
+initMap();
+window.addEventListener("resize", () => {{ if (tmData.length) {{ tmLayout(); tmDraw(); }} }});
 </script>
 
 </body>
