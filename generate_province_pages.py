@@ -304,6 +304,12 @@ body.light .cat-bar-track { background: rgba(0,0,0,0.06); }
   font-size: 11px;
   color: var(--fg2);
 }
+.cat-bar-exp {
+  width: 32px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+}
 
 /* ── Tables ───────────────────────────────────────────────────────────── */
 table {
@@ -424,6 +430,7 @@ def build_page(abbr):
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:{pct}%;background:{color}"></div></div>
       <span class="cat-bar-val">{fmt_jobs(cat['employment'])}</span>
       <span class="cat-bar-pct">{pct:.1f}%</span>
+      <span class="cat-bar-exp" style="color:{color}">{exp:.1f}</span>
     </div>
 """
 

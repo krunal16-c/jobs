@@ -160,6 +160,12 @@ body.light .cat-bar-track { background: rgba(0,0,0,0.06); }
   font-size: 11px;
   color: var(--fg2);
 }
+.cat-bar-exp {
+  width: 32px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+}
 
 /* ── Tables ───────────────────────────────────────────────────────────── */
 table {
@@ -278,7 +284,7 @@ tr:hover td { background: var(--bg3); }
   <h1>British Columbia</h1>
   <div class="hero-stats">
     <div class="stat-card">
-      <div class="num" style="color:hsl(75, 70%, 50%)">3.75</div>
+      <div class="num" style="color:hsl(65, 70%, 50%)">4.58</div>
       <div class="desc">Avg AI exposure (0–10)</div>
     </div>
     <div class="stat-card">
@@ -286,7 +292,7 @@ tr:hover td { background: var(--bg3); }
       <div class="desc">Total employed (2023)</div>
     </div>
     <div class="stat-card">
-      <div class="num num-green">-0.05</div>
+      <div class="num num-red">+0.78</div>
       <div class="desc">vs Canada avg (3.8)</div>
     </div>
     <div class="stat-card">
@@ -305,63 +311,73 @@ tr:hover td { background: var(--bg3); }
   <div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Sales and service</span>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:25.3%;background:hsl(85, 70%, 50%)"></div></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:25.3%;background:hsl(69, 70%, 50%)"></div></div>
       <span class="cat-bar-val">746K</span>
       <span class="cat-bar-pct">25.3%</span>
+      <span class="cat-bar-exp" style="color:hsl(69, 70%, 50%)">4.3</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Trades, transport and equipment operators</span>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:16.3%;background:hsl(93, 70%, 50%)"></div></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:16.3%;background:hsl(96, 70%, 50%)"></div></div>
       <span class="cat-bar-val">480K</span>
       <span class="cat-bar-pct">16.3%</span>
+      <span class="cat-bar-exp" style="color:hsl(96, 70%, 50%)">2.0</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Business, finance and administration</span>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:16.0%;background:hsl(52, 70%, 50%)"></div></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:16.0%;background:hsl(28, 70%, 50%)"></div></div>
       <span class="cat-bar-val">473K</span>
       <span class="cat-bar-pct">16.0%</span>
+      <span class="cat-bar-exp" style="color:hsl(28, 70%, 50%)">7.7</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Education, law and social services</span>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:12.4%;background:hsl(74, 70%, 50%)"></div></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:12.4%;background:hsl(64, 70%, 50%)"></div></div>
       <span class="cat-bar-val">364K</span>
       <span class="cat-bar-pct">12.4%</span>
+      <span class="cat-bar-exp" style="color:hsl(64, 70%, 50%)">4.6</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Natural and applied sciences</span>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:9.4%;background:hsl(48, 70%, 50%)"></div></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:9.4%;background:hsl(44, 70%, 50%)"></div></div>
       <span class="cat-bar-val">277K</span>
       <span class="cat-bar-pct">9.4%</span>
+      <span class="cat-bar-exp" style="color:hsl(44, 70%, 50%)">6.3</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Health occupations</span>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:9.2%;background:hsl(78, 70%, 50%)"></div></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:9.2%;background:hsl(75, 70%, 50%)"></div></div>
       <span class="cat-bar-val">271K</span>
       <span class="cat-bar-pct">9.2%</span>
+      <span class="cat-bar-exp" style="color:hsl(75, 70%, 50%)">3.8</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Art, culture, recreation and sport</span>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:4.5%;background:hsl(70, 70%, 50%)"></div></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:4.5%;background:hsl(60, 70%, 50%)"></div></div>
       <span class="cat-bar-val">134K</span>
       <span class="cat-bar-pct">4.5%</span>
+      <span class="cat-bar-exp" style="color:hsl(60, 70%, 50%)">5.0</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Manufacturing and utilities</span>
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:3.6%;background:hsl(91, 70%, 50%)"></div></div>
       <span class="cat-bar-val">106K</span>
       <span class="cat-bar-pct">3.6%</span>
+      <span class="cat-bar-exp" style="color:hsl(91, 70%, 50%)">2.5</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Natural resources and agriculture</span>
       <div class="cat-bar-track"><div class="cat-bar-fill" style="width:2.3%;background:hsl(92, 70%, 50%)"></div></div>
       <span class="cat-bar-val">69K</span>
       <span class="cat-bar-pct">2.3%</span>
+      <span class="cat-bar-exp" style="color:hsl(92, 70%, 50%)">2.3</span>
     </div>
     <div class="cat-bar-row">
       <span class="cat-bar-label">Management occupations</span>
-      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:0.9%;background:hsl(54, 70%, 50%)"></div></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:0.9%;background:hsl(46, 70%, 50%)"></div></div>
       <span class="cat-bar-val">28K</span>
       <span class="cat-bar-pct">0.9%</span>
+      <span class="cat-bar-exp" style="color:hsl(46, 70%, 50%)">6.2</span>
     </div>
   </div>
 
@@ -383,7 +399,7 @@ tr:hover td { background: var(--bg3); }
         <td>Retail salespersons and visual merchandisers</td>
         <td>Sales and service</td>
         <td>580K</td>
-        <td><span class="score-badge" style="background:hsl(84, 70%, 50%)">3/10</span></td>
+        <td><span class="score-badge" style="background:hsl(72, 70%, 50%)">4/10</span></td>
       </tr>
       <tr>
         <td>Food counter attendants, kitchen helpers and related support occupations</td>
@@ -395,19 +411,19 @@ tr:hover td { background: var(--bg3); }
         <td>Retail and wholesale trade managers</td>
         <td>Sales and service</td>
         <td>355K</td>
-        <td><span class="score-badge" style="background:hsl(72, 70%, 50%)">4/10</span></td>
+        <td><span class="score-badge" style="background:hsl(48, 70%, 50%)">6/10</span></td>
       </tr>
       <tr>
         <td>Cashiers</td>
         <td>Sales and service</td>
         <td>350K</td>
-        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+        <td><span class="score-badge" style="background:hsl(24, 70%, 50%)">8/10</span></td>
       </tr>
       <tr>
         <td>Transport truck drivers</td>
         <td>Trades, transport and equipment operators</td>
         <td>319K</td>
-        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+        <td><span class="score-badge" style="background:hsl(108, 70%, 50%)">1/10</span></td>
       </tr>
     </tbody>
   </table>
@@ -434,28 +450,28 @@ tr:hover td { background: var(--bg3); }
         <td><span class="score-badge" style="background:hsl(0, 70%, 50%)">10/10</span></td>
       </tr>
       <tr>
-        <td>Software developers and programmers</td>
-        <td>156K</td>
-        <td>$100K</td>
+        <td>Receptionists</td>
+        <td>145K</td>
+        <td>$43K</td>
         <td><span class="score-badge" style="background:hsl(12, 70%, 50%)">9/10</span></td>
       </tr>
       <tr>
-        <td>Software engineers and designers</td>
-        <td>113K</td>
-        <td>$117K</td>
-        <td><span class="score-badge" style="background:hsl(24, 70%, 50%)">8/10</span></td>
+        <td>Web developers and programmers</td>
+        <td>29K</td>
+        <td>$79K</td>
+        <td><span class="score-badge" style="background:hsl(12, 70%, 50%)">9/10</span></td>
       </tr>
       <tr>
-        <td>Graphic designers and illustrators</td>
-        <td>93K</td>
-        <td>$65K</td>
-        <td><span class="score-badge" style="background:hsl(24, 70%, 50%)">8/10</span></td>
+        <td>Collection clerks</td>
+        <td>10K</td>
+        <td>$58K</td>
+        <td><span class="score-badge" style="background:hsl(12, 70%, 50%)">9/10</span></td>
       </tr>
       <tr>
-        <td>Computer systems developers and programmers</td>
-        <td>46K</td>
-        <td>$90K</td>
-        <td><span class="score-badge" style="background:hsl(24, 70%, 50%)">8/10</span></td>
+        <td>Court reporters, medical transcriptionists and related occupations</td>
+        <td>8K</td>
+        <td>$54K</td>
+        <td><span class="score-badge" style="background:hsl(12, 70%, 50%)">9/10</span></td>
       </tr>
     </tbody>
   </table>
@@ -481,28 +497,28 @@ tr:hover td { background: var(--bg3); }
         <td>Trades, transport and equipment operators</td>
         <td>319K</td>
         <td style="color:#e0884a;font-weight:600;">High</td>
-        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+        <td><span class="score-badge" style="background:hsl(108, 70%, 50%)">1/10</span></td>
       </tr>
       <tr>
         <td>Material handlers</td>
         <td>Trades, transport and equipment operators</td>
         <td>229K</td>
         <td style="color:#e0884a;font-weight:600;">High</td>
-        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+        <td><span class="score-badge" style="background:hsl(108, 70%, 50%)">1/10</span></td>
       </tr>
       <tr>
         <td>Home building and renovation managers</td>
         <td>Trades, transport and equipment operators</td>
         <td>146K</td>
         <td style="color:#e0884a;font-weight:600;">High</td>
-        <td><span class="score-badge" style="background:hsl(84, 70%, 50%)">3/10</span></td>
+        <td><span class="score-badge" style="background:hsl(72, 70%, 50%)">4/10</span></td>
       </tr>
       <tr>
         <td>Construction trades helpers and labourers</td>
         <td>Trades, transport and equipment operators</td>
         <td>143K</td>
         <td style="color:#e0884a;font-weight:600;">High</td>
-        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+        <td><span class="score-badge" style="background:hsl(108, 70%, 50%)">1/10</span></td>
       </tr>
       <tr>
         <td>Automotive service technicians, truck and bus mechanics and mechanical repairers</td>

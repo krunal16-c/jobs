@@ -16,6 +16,7 @@
   --hbar-track: rgba(255,255,255,0.04);
   --accent: #4a9eff;
   --sidebar-w: 240px;
+  --nav-h: 44px;
 }
 body.light {
   --bg: #f2f2f7;
@@ -37,7 +38,7 @@ body {
 
 #sidebar {
   position: fixed;
-  top: 0; left: 0; bottom: 0;
+  top: var(--nav-h); left: 0; bottom: 0;
   width: var(--sidebar-w);
   background: var(--bg2);
   border-right: 1px solid var(--border);
@@ -343,7 +344,7 @@ input[type=range].score-slider {
 canvas#canvas {
   display: block;
   position: fixed;
-  top: 0;
+  top: var(--nav-h);
   left: var(--sidebar-w);
   cursor: default;
 }
@@ -465,7 +466,7 @@ canvas#canvas {
       <h1>AI Exposure of the Canadian Job Market</h1>
       <div class="subtitle">516 occupations · colour = AI exposure · hover for robotics risk<br>
       <a href="https://www.canada.ca/en/employment-social-development/services/job-bank.html">Job Bank</a> &amp;
-      <a href="https://www.statcan.gc.ca">StatCan</a> · GPT-4o-mini</div>
+      <a href="https://www.statcan.gc.ca">StatCan</a> · GPT-4o</div>
     </div>
     <button id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
@@ -562,6 +563,7 @@ canvas#canvas {
       <div class="stat-big" id="provAvgExposure" style="font-size:28px;">—</div>
       <div class="stat-label">weighted avg AI exposure</div>
       <div style="margin-top:8px;" id="provBreakdown"></div>
+      <a id="provPageLink" href="#" style="display:block;margin-top:10px;font-size:11px;color:var(--accent);text-decoration:none;">View full province analysis →</a>
     </div>
   </div>
 
@@ -832,8 +834,9 @@ function setView(view) {
 
 function layout() {
   const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
+  const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'));
   const w = window.innerWidth - sidebarW;
-  const h = window.innerHeight;
+  const h = window.innerHeight - navH;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   canvas.style.width = w + "px";
@@ -1034,8 +1037,9 @@ let colRects = [];
 
 function layoutColumns() {
   const sidebarW = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w'));
+  const navH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-h'));
   const w = window.innerWidth - sidebarW;
-  const h = window.innerHeight;
+  const h = window.innerHeight - navH;
   canvas.width = w * dpr;
   canvas.height = h * dpr;
   canvas.style.width = w + "px";
@@ -1440,8 +1444,14 @@ function onProvinceChange() {
   });
 
   statsEl.style.display = "block";
+  const provTotalLabel = p.total_employment >= 1e6
+    ? (p.total_employment/1e6).toFixed(2) + "M workers"
+    : Math.round(p.total_employment/1000) + "K workers";
   document.getElementById("provAvgExposure").innerHTML =
     `<span style="color:${exposureColorCSS(p.avg_exposure, 1)}">${p.avg_exposure.toFixed(2)}</span>`;
+  document.querySelector("#provinceStats .stat-label").textContent =
+    `avg exposure · ${provTotalLabel}`;
+  document.getElementById("provPageLink").href = `province/${abbr}.html`;
 
   // Category breakdown bars
   const maxEmp = Math.max(...p.breakdown.map(b => b.employment));
@@ -1457,12 +1467,18 @@ function onProvinceChange() {
     "Sales and service": "Sales & service",
     "Management occupations": "Management",
   };
-  document.getElementById("provBreakdown").innerHTML = p.breakdown.map(b => `
-    <div class="hbar-row">
+  document.getElementById("provBreakdown").innerHTML = p.breakdown.map(b => {
+    const empLabel = b.employment >= 1e6
+      ? (b.employment/1e6).toFixed(1) + "M"
+      : Math.round(b.employment/1000) + "K";
+    return `
+    <div class="hbar-row" style="margin-bottom:2px;">
       <span class="hbar-label" style="font-size:9px;">${catLabels[b.category] || b.category}</span>
       <div class="hbar-track"><div class="hbar-fill" style="width:${b.employment/maxEmp*100}%;background:${exposureColorCSS(b.avg_exposure, 0.8)}"></div></div>
-      <span class="hbar-val">${b.avg_exposure.toFixed(1)}</span>
-    </div>`).join("");
+      <span class="hbar-val" title="${empLabel} workers">${b.avg_exposure.toFixed(1)}</span>
+    </div>
+    <div style="font-size:9px;color:var(--fg2);text-align:right;margin-top:-4px;padding-right:0;margin-bottom:4px;">${empLabel} · ${b.pct}%</div>`;
+  }).join("");
 
   computeStats();
   resize();
