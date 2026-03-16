@@ -497,7 +497,7 @@ canvas#canvas {
   <div class="stat-section">
     <h3>Payroll in high AI-exposure jobs (7+)</h3>
     <div class="stat-big" id="statWages">—</div>
-    <div class="stat-label" id="statWagesDesc">combined 2020 employment income (CAD)</div>
+    <div class="stat-label" id="statWagesDesc">combined annual payroll estimate (2023–2024 LFS wages, CAD)</div>
   </div>
 
   <div class="gradient-legend">
@@ -937,7 +937,7 @@ function showTooltip(d, mx, my) {
   const roboticsColor = { "Very High": "#e05c5c", "High": "#e0884a", "Moderate": "#e0b44a", "Low": "#5cd65c" }[roboticsRisk];
 
   tt.querySelector(".tt-stats").innerHTML = `
-    <span class="label">Median income (2020)</span><span class="value">${formatPay(d.pay)}</span>
+    <span class="label">Median wage (2023–2024)</span><span class="value">${formatPay(d.pay)}</span>
     <span class="label">Employment 2023</span><span class="value">${formatNumber(d.jobs)}</span>
     <span class="label">Outlook</span><span class="value">${d.outlook_desc || "—"}</span>
     <span class="label">Education</span><span class="value" style="text-align:right;font-size:10px;">${eduText}</span>

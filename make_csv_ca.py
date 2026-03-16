@@ -4,16 +4,17 @@ Build a CSV summary of all Canadian occupations from COPS data and employment ou
 Reads:
   - data/cops_summary.csv              (COPS 2024-2033, employment + labour market conditions)
   - data/outlook_ca.xlsx               (3-year employment outlooks by region)
-  - data/census_wages/98100586.csv     (2021 Census median employment income by NOC 2021 unit group)
+  - data/jobbank_wages.json            (Job Bank median hourly wages, 2023-2024 LFS reference)
+  - data/census_wages/98100586.csv     (2021 Census median employment income, fallback only)
 
 Writes: occupations.csv
 
-Wage source: Statistics Canada Table 98-10-0586-01, 2021 Census of Population.
-  Median annual employment income (2020 income reference year) by NOC 2021 unit group,
-  Canada total, all workers aged 15+.
-  511 of 516 occupations matched directly; 5 senior-manager codes (00011-00015) use the
-  consolidated parent code "00018" value, which Statistics Canada published in place of
-  individual unit-group figures for confidentiality reasons.
+Wage source priority:
+  1. Job Bank median hourly wage × 2080 hrs (2023-2024 LFS, scraped from jobbank.gc.ca)
+     Coverage: 454 of 516 occupations
+  2. Statistics Canada Table 98-10-0586-01, 2021 Census (2020 income reference year)
+     Fallback for occupations not on Job Bank
+  3. TEER-based estimate — last resort for any remaining gaps
 
 Usage:
     uv run python make_csv_ca.py
@@ -75,11 +76,28 @@ def load_census_wages(path):
     return wages
 
 
-def get_wage_estimate(code, census_wages):
+def load_jobbank_wages(path):
+    """Load Job Bank median hourly wages (2023-2024 LFS reference period).
+    Returns dict: {noc_code: annual_wage} where annual = hourly * 2080.
     """
-    Return median annual employment income (2020 CAD) from the 2021 Census.
-    Falls back to a TEER-based estimate for any unmatched code.
+    if not os.path.exists(path):
+        print(f"  WARNING: Job Bank wages file not found at {path}")
+        return {}
+    with open(path) as f:
+        raw = json.load(f)
+    # Convert hourly → annual (2080 hrs = 52 weeks × 40 hrs, standard full-time year)
+    return {k: round(v * 2080) for k, v in raw.items() if v is not None}
+
+
+def get_wage_estimate(code, jobbank_wages, census_wages):
     """
+    Return estimated annual wage (CAD) using source priority:
+      1. Job Bank median hourly × 2080 (2023-2024 LFS)
+      2. Census 2021 median annual income (2020 reference year)
+      3. TEER-based estimate
+    """
+    if code in jobbank_wages:
+        return jobbank_wages[code]
     if code in census_wages:
         return census_wages[code]
     # TEER-based fallback (rarely reached)
@@ -170,7 +188,12 @@ def main():
     with open("occupations.json") as f:
         occupations = json.load(f)
 
-    print("Loading 2021 Census wage data...")
+    print("Loading Job Bank wages (2023-2024 LFS)...")
+    jobbank_wages = load_jobbank_wages("data/jobbank_wages.json")
+    jb_matched = sum(1 for o in occupations if o["noc_code"] in jobbank_wages)
+    print(f"  Job Bank wages loaded: {len(jobbank_wages)} occupations matched ({jb_matched}/{len(occupations)})")
+
+    print("Loading 2021 Census wage data (fallback)...")
     census_wages = load_census_wages("data/census_wages/98100586.csv")
     matched = sum(1 for o in occupations if o["noc_code"] in census_wages)
     print(f"  Census wages loaded: {len(census_wages)} unit groups, {matched}/{len(occupations)} occupations matched")
@@ -220,9 +243,9 @@ def main():
             except ValueError:
                 pass
 
-        # Wages — 2021 Census median annual employment income (2020 reference year)
-        annual_pay = get_wage_estimate(code, census_wages)
-        hourly_pay = round(annual_pay / 2000, 2)
+        # Wages — Job Bank 2023-2024 LFS median hourly × 2080, fallback to Census 2021
+        annual_pay = get_wage_estimate(code, jobbank_wages, census_wages)
+        hourly_pay = round(annual_pay / 2080, 2)
 
         # Outlook
         # First try COPS future LMC, then the XLSX national outlook
