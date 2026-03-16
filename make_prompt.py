@@ -111,27 +111,46 @@ def main():
         "Each occupation was scored on a single **AI Exposure** axis from 0 to 10, measuring "
         "how much AI will reshape that occupation. The score considers both direct effects "
         "(AI automating tasks currently done by humans) and indirect effects (AI making each "
-        "worker so productive that fewer are needed)."
+        "worker so productive that fewer are needed). Physical automation (industrial robots, "
+        "autonomous vehicles) is excluded — see the Robotics section for that dimension."
+    )
+    lines.append("")
+    lines.append("### Three-tier AI scope")
+    lines.append("")
+    lines.append(
+        "Scores assess exposure across all three tiers of AI capability, not just base LLMs:"
     )
     lines.append("")
     lines.append(
-        "A key signal is whether the job's work product is fundamentally digital. If the job "
-        "can be done entirely from a home office on a computer — writing, coding, analyzing, "
-        "communicating — then AI exposure is inherently high (7+), because AI capabilities in "
-        "digital domains are advancing rapidly. Conversely, jobs requiring physical presence, "
-        "manual skill, or real-time human interaction have a natural barrier to AI exposure."
+        "- **Tier 1 — Base LLMs**: Writing, summarising, drafting, analysing, coding, translating. "
+        "Reshapes any occupation with significant document or content production."
+    )
+    lines.append(
+        "- **Tier 2 — LLM + tools**: AI with access to APIs, calendars, email, databases, search, "
+        "forms, and CRMs. Can already handle: scheduling appointments, booking travel, processing "
+        "expense reports, drafting and sending correspondence, filling forms, answering customer "
+        "queries end-to-end, generating reports from live databases."
+    )
+    lines.append(
+        "- **Tier 3 — Multi-agent systems**: Networks of AI agents that hand off tasks to each other "
+        "and run entire workflows with minimal human involvement. Examples: an agent that receives a "
+        "client intake, drafts a contract, schedules a signing, and files the document; or a "
+        "recruiting agent that screens résumés, sends interview invitations, and books calendars. "
+        "This tier significantly raises exposure for coordination, scheduling, and communication roles "
+        "that might appear low-exposure under base-LLM-only assessment."
     )
     lines.append("")
-    lines.append("Calibration anchors:")
-    lines.append("- **0–1 Minimal**: roofers, landscapers, commercial divers, underground miners")
-    lines.append("- **2–3 Low**: electricians, plumbers, firefighters, dental hygienists, welders")
-    lines.append("- **4–5 Moderate**: registered nurses, police officers, veterinarians, social workers")
-    lines.append("- **6–7 High**: teachers, managers, accountants, journalists, financial advisors")
-    lines.append("- **8–9 Very high**: software developers, graphic designers, translators, paralegals")
-    lines.append("- **10 Maximum**: data entry clerks, telemarketers, routine digital processing roles")
+    lines.append("### Calibration anchors")
+    lines.append("")
+    lines.append("- **0–1 Minimal**: roofers, landscapers, commercial divers, underground miners, oil field workers")
+    lines.append("- **2–3 Low**: electricians, plumbers, firefighters, dental hygienists, welders, heavy equipment operators")
+    lines.append("- **4–5 Moderate**: registered nurses, police officers, veterinarians, social workers, secondary school teachers")
+    lines.append("- **6–7 High**: accountants, journalists, financial advisors, HR managers, travel counsellors, real estate agents, medical office administrators")
+    lines.append("- **8–9 Very high**: software developers, graphic designers, translators, paralegals, executive assistants, legal administrative assistants, procurement officers")
+    lines.append("- **10 Maximum**: data entry clerks, telemarketers, appointment schedulers, routine transcription and customer service roles")
     lines.append("")
     lines.append(
-        "**Important limitation**: The AI Exposure score captures *cognitive/digital* automation. "
+        "**Scope note**: The AI Exposure score captures *cognitive/digital* automation only. "
         "Physical automation through industrial robotics affects a *different* set of occupations — "
         "primarily in manufacturing, transportation, natural resources, and agriculture — that often "
         "score low on the AI Exposure axis. See the Robotics and Physical Automation section below "

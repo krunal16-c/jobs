@@ -36,29 +36,25 @@ body {
   padding: 0 0 80px;
 }
 
-nav {
-  position: sticky;
-  top: 0;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 32px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  z-index: 10;
-}
-nav a {
-  color: var(--fg2);
-  text-decoration: none;
+/* ── Shared nav ─────────────────────────────────────────────────────── */
+.site-nav {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; height: 44px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
   font-size: 13px;
 }
-nav a:hover { color: var(--fg); }
-nav a.home {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--fg);
-}
-nav .sep { color: var(--sep); }
+.nav-logo { font-weight: 700; color: var(--fg); text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-link { color: var(--fg2); text-decoration: none; padding: 4px 8px; border-radius: 4px; }
+.nav-link:hover { color: var(--fg); background: var(--bg2); }
+.nav-dropdown { position: relative; }
+.nav-drop-btn { background: none; border: none; color: var(--fg2); font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+.nav-drop-btn:hover { color: var(--fg); background: var(--bg2); }
+.nav-drop-menu { display: none; position: absolute; right: 0; top: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; min-width: 220px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 300; }
+.nav-drop-menu a { display: block; padding: 8px 14px; color: var(--fg2); text-decoration: none; font-size: 12px; }
+.nav-drop-menu a:hover { background: var(--bg2); color: var(--fg); }
+.nav-dropdown:hover .nav-drop-menu { display: block; }
 
 .container {
   max-width: 820px;
@@ -231,15 +227,30 @@ tr:hover td { background: var(--bg3); }
 </head>
 <body>
 
-<nav>
-  <a href="index.html" class="home">← AI Exposure: Canada</a>
-  <span class="sep">|</span>
-  <a href="index.html">Treemap</a>
-  <span class="sep">|</span>
-  <span style="color:var(--fg)">Methodology</span>
-  <button id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode"
-    style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--fg2);transition:all 0.15s;">
-  </button>
+<nav class="site-nav">
+  <a href="index.html" class="nav-logo">🇨🇦 AI Exposure</a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Map</a>
+    <a href="about.html" class="nav-link">Methodology</a>
+    <div class="nav-dropdown">
+      <button class="nav-drop-btn">Provinces ▾</button>
+      <div class="nav-drop-menu">
+        <a href="province/ON.html">ON — Ontario</a>
+        <a href="province/QC.html">QC — Quebec</a>
+        <a href="province/BC.html">BC — British Columbia</a>
+        <a href="province/AB.html">AB — Alberta</a>
+        <a href="province/MB.html">MB — Manitoba</a>
+        <a href="province/SK.html">SK — Saskatchewan</a>
+        <a href="province/NS.html">NS — Nova Scotia</a>
+        <a href="province/NB.html">NB — New Brunswick</a>
+        <a href="province/NL.html">NL — Newfoundland and Labrador</a>
+        <a href="province/PE.html">PE — Prince Edward Island</a>
+      </div>
+    </div>
+    <button id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode"
+      style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--fg2);transition:all 0.15s;margin-left:8px;">
+    </button>
+  </div>
 </nav>
 
 <div class="container">

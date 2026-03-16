@@ -5,7 +5,8 @@
       "WebFetch(domain:www23.statcan.gc.ca)",
       "WebFetch(domain:www150.statcan.gc.ca)",
       "Bash(unzip -o lfs_occ_province.zip -d lfs_occ_province/)",
-      "Bash(unzip -o census_noc_province.zip -d census_noc_province/)"
+      "Bash(unzip -o census_noc_province.zip -d census_noc_province/)",
+      "Bash(wc -l /Users/krunal/Desktop/jobs/site/province/*.html)"
     ]
   }
 }

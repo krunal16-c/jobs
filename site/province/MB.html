@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manitoba — AI Exposure | Canadian Job Market</title>
+<style>
+
+/* ── Reset & base ───────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a26;
+  --fg: #e0e0e8;
+  --fg2: #888894;
+  --border: rgba(255,255,255,0.06);
+  --accent: #4a9eff;
+  --sep: rgba(255,255,255,0.2);
+}
+body.light {
+  --bg: #f2f2f7;
+  --bg2: #ffffff;
+  --bg3: #e8e8f0;
+  --fg: #1a1a2e;
+  --fg2: #6b6b80;
+  --accent: #0070f3;
+  --border: rgba(0,0,0,0.08);
+  --sep: rgba(0,0,0,0.2);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.6;
+  padding-bottom: 80px;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Nav ─────────────────────────────────────────────────────────────── */
+.site-nav {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; height: 44px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.nav-logo { font-weight: 700; color: var(--fg); text-decoration: none; }
+.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-link { color: var(--fg2); text-decoration: none; padding: 4px 8px; border-radius: 4px; }
+.nav-link:hover { color: var(--fg); background: var(--bg2); }
+.nav-dropdown { position: relative; }
+.nav-drop-btn { background: none; border: none; color: var(--fg2); font-size: 13px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+.nav-drop-btn:hover { color: var(--fg); background: var(--bg2); }
+.nav-drop-menu { display: none; position: absolute; right: 0; top: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; min-width: 220px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 300; }
+.nav-drop-menu a { display: block; padding: 8px 14px; color: var(--fg2); text-decoration: none; font-size: 12px; }
+.nav-drop-menu a:hover { background: var(--bg2); color: var(--fg); }
+.nav-dropdown:hover .nav-drop-menu { display: block; }
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.province-hero {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 40px 32px 32px;
+}
+.province-hero h1 {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 24px;
+}
+
+/* ── Stat cards ───────────────────────────────────────────────────────── */
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  max-width: 760px;
+}
+.stat-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.stat-card .num {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-card .desc {
+  font-size: 11px;
+  color: var(--fg2);
+  line-height: 1.4;
+}
+.num-blue   { color: var(--accent); }
+.num-green  { color: #5cd65c; }
+.num-yellow { color: #e0b44a; }
+.num-red    { color: #e05c5c; }
+
+/* ── Container ────────────────────────────────────────────────────────── */
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px 32px 0;
+}
+
+/* ── Section headings ─────────────────────────────────────────────────── */
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 44px 0 14px;
+  padding-top: 44px;
+  border-top: 1px solid var(--border);
+}
+h2:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+
+/* ── Category bars ────────────────────────────────────────────────────── */
+.cat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  font-size: 13px;
+}
+.cat-bar-label {
+  width: 230px;
+  flex-shrink: 0;
+  color: var(--fg2);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cat-bar-track {
+  flex: 1;
+  height: 10px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+body.light .cat-bar-track { background: rgba(0,0,0,0.06); }
+.cat-bar-fill { height: 100%; border-radius: 3px; }
+.cat-bar-val {
+  width: 36px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--fg);
+}
+.cat-bar-pct {
+  width: 44px;
+  text-align: right;
+  font-size: 11px;
+  color: var(--fg2);
+}
+
+/* ── Tables ───────────────────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 16px 0 24px;
+}
+th {
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg2);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--fg2);
+  vertical-align: top;
+}
+td:first-child { color: var(--fg); font-weight: 500; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+
+/* ── Exposure badge ───────────────────────────────────────────────────── */
+.score-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* ── Outlook distribution ─────────────────────────────────────────────── */
+.outlook-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+.outlook-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+}
+.outlook-card .oc-num {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.outlook-card .oc-label {
+  font-size: 11px;
+  color: var(--fg2);
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+.footer {
+  margin-top: 60px;
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--fg2);
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.footer a { color: var(--fg2); }
+.footer a:hover { color: var(--fg); }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .province-hero { padding: 24px 16px 20px; }
+  .province-hero h1 { font-size: 26px; }
+  .container { padding: 24px 16px 0; }
+  .cat-bar-label { width: 140px; }
+  .footer { padding: 20px 16px; }
+}
+
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="nav-logo">🇨🇦 AI Exposure</a>
+  <div class="nav-links">
+    <a href="../index.html" class="nav-link">Map</a>
+    <a href="../about.html" class="nav-link">Methodology</a>
+    <div class="nav-dropdown">
+      <button class="nav-drop-btn">Provinces ▾</button>
+      <div class="nav-drop-menu">
+          <a href="ON.html">ON — Ontario</a>
+          <a href="QC.html">QC — Quebec</a>
+          <a href="BC.html">BC — British Columbia</a>
+          <a href="AB.html">AB — Alberta</a>
+          <a href="MB.html">MB — Manitoba</a>
+          <a href="SK.html">SK — Saskatchewan</a>
+          <a href="NS.html">NS — Nova Scotia</a>
+          <a href="NB.html">NB — New Brunswick</a>
+          <a href="NL.html">NL — Newfoundland and Labrador</a>
+          <a href="PE.html">PE — Prince Edward Island</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="province-hero">
+  <h1>Manitoba</h1>
+  <div class="hero-stats">
+    <div class="stat-card">
+      <div class="num" style="color:hsl(77, 70%, 50%)">3.62</div>
+      <div class="desc">Avg AI exposure (0–10)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-blue">736K</div>
+      <div class="desc">Total employed (2023)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-green">-0.18</div>
+      <div class="desc">vs Canada avg (3.8)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="font-size:16px;line-height:1.3;margin-bottom:4px;color:var(--fg)">Sales and service</div>
+      <div class="desc">Largest sector (23.1% of jobs)</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <h2>Employment by sector</h2>
+  <p style="font-size:13px;color:var(--fg2);margin-bottom:16px;">
+    Bar width = share of provincial employment. Colour = average AI exposure for that sector.
+  </p>
+  <div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Sales and service</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:23.1%;background:hsl(85, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">170K</span>
+      <span class="cat-bar-pct">23.1%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Trades, transport and equipment operators</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:18.0%;background:hsl(93, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">133K</span>
+      <span class="cat-bar-pct">18.0%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Business, finance and administration</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:15.4%;background:hsl(52, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">113K</span>
+      <span class="cat-bar-pct">15.4%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Education, law and social services</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:13.9%;background:hsl(74, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">102K</span>
+      <span class="cat-bar-pct">13.9%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Health occupations</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:10.2%;background:hsl(78, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">75K</span>
+      <span class="cat-bar-pct">10.2%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Natural and applied sciences</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:7.0%;background:hsl(48, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">51K</span>
+      <span class="cat-bar-pct">7.0%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Manufacturing and utilities</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:6.3%;background:hsl(91, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">46K</span>
+      <span class="cat-bar-pct">6.3%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Natural resources and agriculture</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:2.8%;background:hsl(92, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">20K</span>
+      <span class="cat-bar-pct">2.8%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Art, culture, recreation and sport</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:2.6%;background:hsl(70, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">19K</span>
+      <span class="cat-bar-pct">2.6%</span>
+    </div>
+    <div class="cat-bar-row">
+      <span class="cat-bar-label">Management occupations</span>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:0.7%;background:hsl(54, 70%, 50%)"></div></div>
+      <span class="cat-bar-val">5K</span>
+      <span class="cat-bar-pct">0.7%</span>
+    </div>
+  </div>
+
+  <h2>Top employers in dominant sectors</h2>
+  <p style="font-size:13px;color:var(--fg2);margin-bottom:4px;">
+    Highest-employment occupations in Manitoba's three largest sectors by employment.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Occupation</th>
+        <th>Sector</th>
+        <th>Jobs (national)</th>
+        <th>AI Exposure</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Retail salespersons and visual merchandisers</td>
+        <td>Sales and service</td>
+        <td>580K</td>
+        <td><span class="score-badge" style="background:hsl(84, 70%, 50%)">3/10</span></td>
+      </tr>
+      <tr>
+        <td>Food counter attendants, kitchen helpers and related support occupations</td>
+        <td>Sales and service</td>
+        <td>383K</td>
+        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+      </tr>
+      <tr>
+        <td>Retail and wholesale trade managers</td>
+        <td>Sales and service</td>
+        <td>355K</td>
+        <td><span class="score-badge" style="background:hsl(72, 70%, 50%)">4/10</span></td>
+      </tr>
+      <tr>
+        <td>Cashiers</td>
+        <td>Sales and service</td>
+        <td>350K</td>
+        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+      </tr>
+      <tr>
+        <td>Transport truck drivers</td>
+        <td>Trades, transport and equipment operators</td>
+        <td>319K</td>
+        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Highest AI-exposure occupations</h2>
+  <p style="font-size:13px;color:var(--fg2);margin-bottom:4px;">
+    Occupations scoring ≥ 7/10 on cognitive AI exposure nationally — these roles face the
+    highest displacement risk from language models and digital automation.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Occupation</th>
+        <th>Jobs (national)</th>
+        <th>Median pay</th>
+        <th>AI Exposure</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Data entry clerks</td>
+        <td>36K</td>
+        <td>$48K</td>
+        <td><span class="score-badge" style="background:hsl(0, 70%, 50%)">10/10</span></td>
+      </tr>
+      <tr>
+        <td>Software developers and programmers</td>
+        <td>156K</td>
+        <td>$100K</td>
+        <td><span class="score-badge" style="background:hsl(12, 70%, 50%)">9/10</span></td>
+      </tr>
+      <tr>
+        <td>Software engineers and designers</td>
+        <td>113K</td>
+        <td>$117K</td>
+        <td><span class="score-badge" style="background:hsl(24, 70%, 50%)">8/10</span></td>
+      </tr>
+      <tr>
+        <td>Graphic designers and illustrators</td>
+        <td>93K</td>
+        <td>$65K</td>
+        <td><span class="score-badge" style="background:hsl(24, 70%, 50%)">8/10</span></td>
+      </tr>
+      <tr>
+        <td>Computer systems developers and programmers</td>
+        <td>46K</td>
+        <td>$90K</td>
+        <td><span class="score-badge" style="background:hsl(24, 70%, 50%)">8/10</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Highest robotics-risk occupations</h2>
+  <p style="font-size:13px;color:var(--fg2);margin-bottom:4px;">
+    Occupations in trades, natural resources, and manufacturing — sectors most exposed to
+    physical automation (industrial robots, autonomous vehicles, precision agriculture).
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Occupation</th>
+        <th>Sector</th>
+        <th>Jobs (national)</th>
+        <th>Robotics risk</th>
+        <th>AI Exposure</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Transport truck drivers</td>
+        <td>Trades, transport and equipment operators</td>
+        <td>319K</td>
+        <td style="color:#e0884a;font-weight:600;">High</td>
+        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+      </tr>
+      <tr>
+        <td>Material handlers</td>
+        <td>Trades, transport and equipment operators</td>
+        <td>229K</td>
+        <td style="color:#e0884a;font-weight:600;">High</td>
+        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+      </tr>
+      <tr>
+        <td>Home building and renovation managers</td>
+        <td>Trades, transport and equipment operators</td>
+        <td>146K</td>
+        <td style="color:#e0884a;font-weight:600;">High</td>
+        <td><span class="score-badge" style="background:hsl(84, 70%, 50%)">3/10</span></td>
+      </tr>
+      <tr>
+        <td>Construction trades helpers and labourers</td>
+        <td>Trades, transport and equipment operators</td>
+        <td>143K</td>
+        <td style="color:#e0884a;font-weight:600;">High</td>
+        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+      </tr>
+      <tr>
+        <td>Automotive service technicians, truck and bus mechanics and mechanical repairers</td>
+        <td>Trades, transport and equipment operators</td>
+        <td>140K</td>
+        <td style="color:#e0884a;font-weight:600;">High</td>
+        <td><span class="score-badge" style="background:hsl(96, 70%, 50%)">2/10</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Labour market outlook 2025–2027</h2>
+  <p style="font-size:13px;color:var(--fg2);margin-bottom:16px;">
+    Count of occupations by Job Bank 3-year employment outlook rating for Manitoba.
+    Source: ESDC 3-Year Employment Outlooks 2025–2027.
+  </p>
+  <div class="outlook-grid">
+    <div class="outlook-card">
+      <div class="oc-num" style="color:#5cd65c">9</div>
+      <div class="oc-label">Very good</div>
+    </div>
+    <div class="outlook-card">
+      <div class="oc-num" style="color:#5cd65c">52</div>
+      <div class="oc-label">Good</div>
+    </div>
+    <div class="outlook-card">
+      <div class="oc-num" style="color:#e0b44a">217</div>
+      <div class="oc-label">Moderate</div>
+    </div>
+    <div class="outlook-card">
+      <div class="oc-num" style="color:#e05c5c">125</div>
+      <div class="oc-label">Limited</div>
+    </div>
+    <div class="outlook-card">
+      <div class="oc-num" style="color:#e03232">22</div>
+      <div class="oc-label">Very limited</div>
+    </div>
+    <div class="outlook-card">
+      <div class="oc-num" style="color:#888894">91</div>
+      <div class="oc-label">Undetermined</div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  <a href="../index.html">← Back to national map</a> &nbsp;|&nbsp;
+  <a href="../about.html">Methodology</a> &nbsp;|&nbsp;
+  Data: <a href="https://open.canada.ca" target="_blank" rel="noopener">open.canada.ca</a>,
+  <a href="https://www.jobbank.gc.ca" target="_blank" rel="noopener">Job Bank</a>,
+  <a href="https://www.statcan.gc.ca" target="_blank" rel="noopener">Statistics Canada</a>
+</div>
+
+<script>
+// Theme persistence
+(function() {
+  var stored = localStorage.getItem("theme");
+  if (stored === "light") document.body.classList.add("light");
+})();
+</script>
+
+</body>
+</html>
