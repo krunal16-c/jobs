@@ -813,13 +813,17 @@ function tmShowTooltip(d, canvasMx, canvasMy) {
     <span class="label">Robotics risk</span><span class="value" style="color:${ROBO_CLR[rr]||ROBO_CLR.Low};font-weight:600;">${rr}</span>
   `;
   tmTooltip.querySelector(".tt-rationale").textContent = d.exposure_rationale || "";
-  const pad = 16;
-  let tx = absX + pad, ty = absY - pad;
-  if (tx + 340 > window.innerWidth) tx = absX - 340 - pad;
-  if (ty < 10) ty = absY + pad;
-  if (ty + 240 > window.innerHeight) ty = absY - 240;
-  tmTooltip.style.left = tx + "px"; tmTooltip.style.top = ty + "px";
+  // Position off-screen to measure actual height, then reposition
+  tmTooltip.style.left = "-9999px";
+  tmTooltip.style.top = "0px";
   tmTooltip.classList.add("visible");
+  const pad = 16;
+  const ttW = 340, ttH = tmTooltip.offsetHeight;
+  let tx = absX + pad, ty = absY - pad;
+  if (tx + ttW > window.innerWidth) tx = absX - ttW - pad;
+  if (ty + ttH > window.innerHeight) ty = absY - ttH - pad;
+  if (ty < 10) ty = 10;
+  tmTooltip.style.left = tx + "px"; tmTooltip.style.top = ty + "px";
 }
 function tmHideTooltip() { tmTooltip.classList.remove("visible"); }
 

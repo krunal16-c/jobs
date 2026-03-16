@@ -1017,14 +1017,19 @@ function showTooltip(d, mx, my) {
 
   tt.querySelector(".tt-rationale").textContent = d.exposure_rationale || "";
 
+  // Position off-screen first to measure actual height
+  tt.style.left = "-9999px";
+  tt.style.top = "0px";
+  tt.classList.add("visible");
+
   const pad = 16;
+  const ttW = 340, ttH = tt.offsetHeight;
   let tx = mx + pad, ty = my - pad;
-  if (tx + 340 > window.innerWidth) tx = mx - 340 - pad;
-  if (ty < 10) ty = my + pad;
-  if (ty + 220 > window.innerHeight) ty = my - 220;
+  if (tx + ttW > window.innerWidth) tx = mx - ttW - pad;
+  if (ty + ttH > window.innerHeight) ty = my - ttH - pad;
+  if (ty < 10) ty = 10;
   tt.style.left = tx + "px";
   tt.style.top = ty + "px";
-  tt.classList.add("visible");
 }
 
 function hideTooltip() {
