@@ -409,6 +409,61 @@ canvas#canvas {
   cursor: default;
 }
 
+/* ── Hamburger (hidden on desktop) ───────────────────────────────────── */
+#menuBtn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 32px; height: 32px;
+  align-items: center; justify-content: center;
+  font-size: 16px; color: var(--fg2);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+#menuBtn:hover { color: var(--fg); background: var(--bg2); }
+
+/* ── Sidebar overlay (mobile drawer backdrop) ─────────────────────────── */
+#sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 90;
+}
+#sidebar-overlay.open { display: block; }
+
+/* ── Mobile ─────────────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  :root { --sidebar-w: 0px; }
+
+  #sidebar {
+    width: 288px;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    z-index: 100;
+  }
+  #sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+
+  canvas#canvas { left: 0; }
+
+  #menuBtn { display: flex; }
+
+  /* Hide nav links on tiny screens; sidebar has everything */
+  .nav-links { display: none; }
+
+  /* Tooltip: pin to bottom of screen so it never goes off */
+  #tooltip.tt-mobile {
+    left: 10px !important;
+    right: 10px !important;
+    top: auto !important;
+    bottom: 10px !important;
+    max-width: none !important;
+    width: auto;
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+}
+
 #tooltip {
   position: fixed;
   pointer-events: none;
@@ -497,6 +552,7 @@ canvas#canvas {
 
 <nav class="site-nav">
   <a href="index.html" class="nav-logo">🇨🇦 AI Exposure</a>
+  <button id="menuBtn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
   <div class="nav-links">
     <a href="index.html" class="nav-link">Map</a>
     <a href="about.html" class="nav-link">Methodology</a>
@@ -517,6 +573,8 @@ canvas#canvas {
     </div>
   </div>
 </nav>
+
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
 <div id="sidebar">
 
@@ -1095,14 +1153,24 @@ function showTooltip(d, mx, my) {
   // Position off-screen first to measure actual height
   tt.style.left = "-9999px";
   tt.style.top = "0px";
+  tt.classList.remove("tt-mobile");
   tt.classList.add("visible");
+
+  // Mobile: pin to bottom
+  if (window.innerWidth <= 700) {
+    tt.classList.add("tt-mobile");
+    return;
+  }
 
   const pad = 16;
   const ttW = 340, ttH = tt.offsetHeight;
-  let tx = mx + pad, ty = my - pad;
-  if (tx + ttW > window.innerWidth) tx = mx - ttW - pad;
-  if (ty + ttH > window.innerHeight) ty = my - ttH - pad;
-  if (ty < 10) ty = 10;
+  let tx = mx + pad;
+  // Flip horizontally if off right edge
+  if (tx + ttW > window.innerWidth - 8) tx = mx - ttW - pad;
+  if (tx < 8) tx = 8;
+  // Flip vertically: show above cursor if in bottom half of screen
+  let ty = (my > window.innerHeight * 0.55) ? my - ttH - pad : my + pad;
+  ty = Math.max(10, Math.min(ty, window.innerHeight - ttH - 10));
   tt.style.left = tx + "px";
   tt.style.top = ty + "px";
 }
@@ -1565,6 +1633,54 @@ function onProvinceChange() {
 }
 
 window.addEventListener("resize", resize);
+
+// ── Mobile sidebar toggle ─────────────────────────────────────────────
+
+function toggleSidebar() {
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("sidebar-overlay").classList.toggle("open");
+}
+
+// Close sidebar when a link inside it is tapped on mobile
+document.getElementById("sidebar").addEventListener("click", (e) => {
+  if (window.innerWidth <= 700 && e.target.tagName === "A") {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebar-overlay").classList.remove("open");
+  }
+});
+
+// ── Touch events (mobile) ─────────────────────────────────────────────
+
+let lastTouchSlug = null;
+
+canvas.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  const touch = e.changedTouches[0];
+  const hit = currentView === "treemap"
+    ? hitTest(touch.clientX, touch.clientY)
+    : hitTestColumns(touch.clientX, touch.clientY);
+
+  if (!hit) {
+    hovered = null;
+    hideTooltip();
+    lastTouchSlug = null;
+    currentView === "treemap" ? draw() : drawColumns();
+    return;
+  }
+
+  // Second tap on same cell → open URL
+  if (hit.slug === lastTouchSlug && hit.url) {
+    window.open(hit.url, "_blank");
+    return;
+  }
+
+  lastTouchSlug = hit.slug;
+  hovered = hit;
+  currentView === "treemap" ? draw() : drawColumns();
+  showTooltip(hit, touch.clientX, touch.clientY);
+}, { passive: false });
+
+canvas.addEventListener("touchmove", (e) => { e.preventDefault(); }, { passive: false });
 
 // ── Search ───────────────────────────────────────────────────────────────
 
