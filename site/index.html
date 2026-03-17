@@ -258,6 +258,66 @@ input[type=range].score-slider {
   text-align: right;
 }
 
+/* ── Search ───────────────────────────────────────────────────────────── */
+.search-wrap { position: relative; }
+.search-input {
+  width: 100%;
+  padding: 7px 30px 7px 28px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--fg2); }
+.search-icon-left {
+  position: absolute; left: 9px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px; color: var(--fg2); pointer-events: none;
+}
+.search-clear {
+  position: absolute; right: 8px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; color: var(--fg2);
+  font-size: 14px; line-height: 1; cursor: pointer;
+  display: none; padding: 0 2px;
+}
+.search-clear:hover { color: var(--fg); }
+.search-results {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  max-height: 290px;
+  overflow-y: auto;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+.search-results.open { display: block; }
+.search-result {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.search-result:last-child { border-bottom: none; }
+.search-result:hover, .search-result.sr-active { background: var(--bg); }
+.sr-score {
+  width: 24px; height: 24px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0; color: #fff;
+}
+.sr-info { flex: 1; min-width: 0; }
+.sr-title { font-size: 12px; font-weight: 500; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr-meta { font-size: 10px; color: var(--fg2); margin-top: 1px; }
+.search-empty { padding: 12px 10px; font-size: 12px; color: var(--fg2); text-align: center; }
+
 .view-toggle {
   display: flex;
   gap: 4px;
@@ -498,6 +558,21 @@ canvas#canvas {
         –
         <span class="rdval" id="rangeDisplayMax">10</span>
       </div>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="stat-section">
+    <h3>Search</h3>
+    <div class="search-wrap" id="searchWrap">
+      <span class="search-icon-left">⌕</span>
+      <input type="text" id="searchInput" class="search-input"
+             placeholder="Occupation, NOC code…"
+             autocomplete="off" spellcheck="false"
+             oninput="onSearchInput(this.value)"
+             onkeydown="onSearchKey(event)">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" tabindex="-1">×</button>
+      <div class="search-results" id="searchResults"></div>
     </div>
   </div>
 
@@ -1490,6 +1565,121 @@ function onProvinceChange() {
 }
 
 window.addEventListener("resize", resize);
+
+// ── Search ───────────────────────────────────────────────────────────────
+
+let searchActiveIdx = -1;
+
+function searchOccupations(q) {
+  const tokens = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [];
+  const scored = [];
+  for (const d of data) {
+    const titleMain = (d.title_jobbank || d.title || '').toLowerCase();
+    const hay = [d.title, d.title_jobbank, d.category, d.noc_code]
+      .filter(Boolean).join(' ').toLowerCase();
+    let score = 0;
+    for (const tok of tokens) {
+      if (titleMain.startsWith(tok)) score += 4;
+      else if (titleMain.includes(tok)) score += 2;
+      else if (hay.includes(tok)) score += 1;
+    }
+    if (score > 0) scored.push({ d, score });
+  }
+  scored.sort((a, b) => b.score - a.score || (b.d.jobs || 0) - (a.d.jobs || 0));
+  return scored.slice(0, 12).map(x => x.d);
+}
+
+function renderSearchResults(results, q) {
+  const el = document.getElementById('searchResults');
+  searchActiveIdx = -1;
+  if (!results.length) {
+    el.innerHTML = `<div class="search-empty">No results for "${q}"</div>`;
+    el.classList.add('open');
+    return;
+  }
+  el.innerHTML = results.map((d, i) => {
+    const score = d.exposure ?? '–';
+    const color = d.exposure != null ? exposureColorCSS(d.exposure, 1) : '#888';
+    const jobs = d.jobs ? formatNumber(d.jobs) + ' jobs' : '';
+    const pay = d.pay ? ' · ' + formatPay(d.pay) : '';
+    const title = d.title_jobbank || d.title;
+    return `<div class="search-result" data-slug="${d.slug}" data-idx="${i}"
+               onmousedown="selectOccupation('${d.slug}')">
+      <div class="sr-score" style="background:${color}">${score}</div>
+      <div class="sr-info">
+        <div class="sr-title">${title}</div>
+        <div class="sr-meta">${jobs}${pay}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.classList.add('open');
+}
+
+function selectOccupation(slug) {
+  clearSearch();
+  // Switch to treemap if needed
+  if (currentView !== 'treemap') setView('treemap');
+
+  // Find matching rect (layout must be done first)
+  const rect = rects.find(r => r.slug === slug);
+  if (!rect) return;
+
+  hovered = rect;
+  draw();
+
+  // Show tooltip at centre of the rect in screen coords
+  const cBounds = canvas.getBoundingClientRect();
+  const sx = cBounds.left + rect.rx + rect.rw / 2;
+  const sy = cBounds.top + rect.ry + rect.rh / 2;
+  showTooltip(rect, sx, sy);
+}
+
+function onSearchInput(val) {
+  document.getElementById('searchClear').style.display = val ? 'block' : 'none';
+  if (!val.trim()) {
+    document.getElementById('searchResults').classList.remove('open');
+    return;
+  }
+  renderSearchResults(searchOccupations(val), val);
+}
+
+function clearSearch() {
+  const inp = document.getElementById('searchInput');
+  inp.value = '';
+  document.getElementById('searchClear').style.display = 'none';
+  document.getElementById('searchResults').classList.remove('open');
+  searchActiveIdx = -1;
+}
+
+function onSearchKey(e) {
+  const el = document.getElementById('searchResults');
+  const items = el.querySelectorAll('.search-result');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    searchActiveIdx = Math.min(searchActiveIdx + 1, items.length - 1);
+    items.forEach((r, i) => r.classList.toggle('sr-active', i === searchActiveIdx));
+    items[searchActiveIdx]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    searchActiveIdx = Math.max(searchActiveIdx - 1, 0);
+    items.forEach((r, i) => r.classList.toggle('sr-active', i === searchActiveIdx));
+    items[searchActiveIdx]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const active = searchActiveIdx >= 0 ? items[searchActiveIdx] : items[0];
+    if (active) selectOccupation(active.dataset.slug);
+  } else if (e.key === 'Escape') {
+    clearSearch();
+  }
+}
+
+// Close results when clicking outside the search widget
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('searchWrap').contains(e.target)) {
+    document.getElementById('searchResults').classList.remove('open');
+  }
+});
 </script>
 </body>
 </html>
